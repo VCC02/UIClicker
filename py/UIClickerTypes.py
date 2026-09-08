@@ -452,7 +452,7 @@ class TFindControlOptions(Structure):
                ("GetAllControls", BOOLEAN),
                ("PrecisionTimeout", BOOLEAN),
                ("EvaluateTextCount", LPCWSTR),
-               ("AttemptCount", TAttemptCount)
+               ("AttemptCount", BYTE) #TAttemptCount)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -545,7 +545,7 @@ class TFindSubControlOptions(Structure):
                ("RenderingInBrowserSettings", TRenderingInBrowserSettings),
                ("GPUSettings", TGPUSettings),
                ("ImageEffectSettings", TImageEffectSettings),
-               ("AttemptCount", TAttemptCount)
+               ("AttemptCount", BYTE) #TAttemptCount)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -809,7 +809,7 @@ def GetDefaultEditTemplateOptions():
     return EditTemplateOptions
 
 
-class TClkLoadSetVarFromIniFileOptions(Structure):
+class TLoadSetVarFromIniFileOptions(Structure):
     _fields_ = [("FileName", LPCWSTR),
                ("SetVarActionName", LPCWSTR),
                ("VarListFormat", BYTE), #LONG),  #TVarListFormat
@@ -820,7 +820,7 @@ class TClkLoadSetVarFromIniFileOptions(Structure):
                ("CounterType", BYTE), #LONG),  #TCounterType
                ("Counter", LPCWSTR)]
 
-PTClkLoadSetVarFromIniFileOptions = ctypes.POINTER(TClkLoadSetVarFromIniFileOptions)
+PLoadSetVarFromIniFileOptions = ctypes.POINTER(TLoadSetVarFromIniFileOptions)
 
 def GetDefaultLoadSetVarFromIniFileOptions():
     LoadSetVarFromIniFileOptions = TLoadSetVarFromIniFileOptions()

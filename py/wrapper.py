@@ -183,7 +183,7 @@ try:
     FindSubControlOptions.MatchBitmapText = PMatchBitmapTextRec(TempMatchBitmapTextRec)
     FindSubControlOptions.ThreadCount = '3'
     
-    print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'AFindSubColntrol', 1000, True, '$a$<>$b$', ctypes.byref(FindSubControlOptions)))
+    print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'AFindSubControl', 1000, True, '$a$<>$b$', ctypes.byref(FindSubControlOptions)))
     
     #///////////////////
     

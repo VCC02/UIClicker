@@ -248,7 +248,7 @@ implementation
 uses
   ClickerActionsClient, ClickerUtils, AsyncProcess, Process, Expectations, Forms, //IniFiles,
   ObjectInspectorFrame, ClickerActionProperties, ClickerActionValues, ActionsStuff,
-  UITestUtils;
+  UITestUtils, PitstopTestRunner;
 
 
 const
@@ -1169,7 +1169,7 @@ var
   i: Integer;
   PyProc: TProcess;
   tk: QWord;
-  PyOut: string;
+  PyOut, ErrMsg: string;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
@@ -1190,8 +1190,18 @@ begin
 
   //These tests do not call DragActionToListOnAppUnderTest.clktmpl. Instead, a python script sends a request to create the action.
 
-  //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
-  PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
+  try
+    //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
+    PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
+  except
+    on E: Exception do
+    begin
+      ErrMsg := 'Error starting Python. Make sure it is installed and available in PATH. ' + E.Message;
+      frmPitstopTestRunner.AddToLog(ErrMsg);
+      raise Exception.Create(ErrMsg);
+    end;
+  end;
+
   try
     try
       SetVariableOnTestDriverClient('$PropertyCount$', IntToStr(Length(AProperties)));
@@ -1228,7 +1238,23 @@ begin
 
       PyProc.Terminate(0);
       //MessageBoxFunction(PChar(PyOut), 'PyOut', 0);  //ideally, this should end up in a log
-      Expect(DWord(Pos('Traceback (most recent call last)', PyOut))).ToBe(0, 'No py error allowed.');
+      try
+        Expect(DWord(Pos('Traceback (most recent call last)', PyOut))).ToBe(0, 'No py error allowed.');
+      except
+        on E: Exception do
+        begin
+          ErrMsg := 'Error executing Python. ' + E.Message;
+
+          if Pos('self._handle = _dlopen(self._name, mode)', PyOut) > 0 then
+            ErrMsg := ErrMsg + ' Also make sure ClickerClient (.dll/.so) can be found in the expected location and matches python bitness.';
+
+          frmPitstopTestRunner.AddToLog(ErrMsg);
+          frmPitstopTestRunner.AddToLog(PyOut);
+
+          ErrMsg := ErrMsg + ' See the log box for extra output.';
+          raise Exception.Create(ErrMsg);
+        end;
+      end;
     end;
   finally
     try
