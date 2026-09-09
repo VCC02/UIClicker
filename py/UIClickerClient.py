@@ -28,7 +28,7 @@ from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG, LARGE_INTEGER,
 
 ClickerClientAPIDir = os.path.abspath(os.path.dirname(__file__))
 #print('--- ClickerClientAPIDir = ', ClickerClientAPIDir)
-ClickerClientDllPath = os.path.abspath(os.path.join(ClickerClientAPIDir, '../ClickerClient/ClickerClient.dll'))
+ClickerClientDllPath = os.path.abspath(os.path.join(ClickerClientAPIDir, '../ClickerClient/lib/x86_64-win64/ClickerClient.dll'))
 #print('--- ClickerClientDllPath = ', ClickerClientDllPath) #There is an extra space before the actual path :(
 
 sys.path.append(ClickerClientAPIDir)
@@ -1050,9 +1050,13 @@ class TDllFunctions:
         
         if '$OSBitness$=win64' in AllVars:
             OSBitness = 'win64'
-        else:
+
+        if '$OSBitness$=win32' in AllVars:
             OSBitness = 'win32'
-            
+
+        if '$OSBitness$=linux' in AllVars:
+            OSBitness = 'linux'
+
         return AppBitness + '-' + OSBitness
 
 #A similar set of functions as above, but these ones return Boolean, instead of 0 or 1.

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: 13 Apr 2025
     initial release date: 13 Apr 2025
 
@@ -44,6 +44,7 @@ procedure PrepareCustomClickerUnderTestToLocalMode(ATestDriverAddr, ATemplatesDi
 procedure PrepareCustomClickerUnderTestToClientMode(ATestDriverAddr, ATemplatesDir: string);
 
 procedure CheckAutoCloseBrowser(ATestDriverAddr, ATemplatesDir: string; ACheckState: Boolean);
+function GetClickerClientPath: string;
 
 const
   CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
@@ -186,6 +187,15 @@ begin
   ExecuteTemplateOnCustomTestDriver(ATestDriverAddr, ATemplatesDir + 'CheckAutoCloseBrowser.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
+
+function GetClickerClientPath: string;
+begin
+  {$IFDEF Windows}
+    Result := ExtractFilePath(ParamStr(0)) + '..\ClickerClient\lib\' + {$IFDEF CPU64} 'x86_64-win64' {$ELSE} 'i386-win32' {$ENDIF} + '\ClickerClient.dll';
+  {$ELSE}
+    Result := ExtractFilePath(ParamStr(0)) + '../ClickerClient/lib/' + {$IFDEF CPU64} 'x86_64-linux' {$ELSE} 'i386-linux' {$ENDIF} + '/ClickerClient';
+  {$ENDIF}
+end;
 
 end.
 

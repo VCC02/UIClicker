@@ -1010,6 +1010,8 @@ begin
     {$ELSE}
       FBuiltInVariables.Add('$OSBitness$=win32');
     {$ENDIF}
+  {$ELSE}
+    FBuiltInVariables.Add('$OSBitness$=linux');
   {$ENDIF}
 
   FBuiltInVariables.Add('$SelfActionName$=');

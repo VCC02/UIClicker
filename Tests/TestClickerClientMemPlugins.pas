@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: 13 Jan 2025
     initial release date: 14 Jan 2025
 
@@ -163,7 +163,8 @@ begin
   if (TestName = 'BeforeAll_AlwaysExecute') or (TestName = 'AfterAll_AlwaysExecute') then
     Exit;
 
-  FLoadClickerClientRes := LoadClickerClient('..\ClickerClient\ClickerClient.dll');
+  FLoadClickerClientRes := LoadClickerClient(GetClickerClientPath);
+
   Expect(FLoadClickerClientRes).ToBe(True, 'Can''t load ClickerClient.dll');
 
   InitClickerClient;

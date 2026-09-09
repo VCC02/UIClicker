@@ -103,9 +103,13 @@ function GetPluginInMemFSIndex(var ADecDecHashPluginInMemFSArr: TDecDecHashPlugi
 
 
 const
-  CPluginPath32BitPrefix = 'i386-win32\';
-  CPluginPath64BitPrefix = 'x86_64-win64\';
-
+  {$IFDEF Windows}
+    CPluginPath32BitPrefix = 'i386-win32\';
+    CPluginPath64BitPrefix = 'x86_64-win64\';
+  {$ELSE}
+    CPluginPath32BitPrefix = 'i386-linux\';
+    CPluginPath64BitPrefix = 'x86_64-linux\';
+  {$ENDIF}
 
 implementation
 
@@ -458,6 +462,10 @@ begin
   if FHashingPluginName = '' then
   begin
     DoOnAddToLog('Using built-in hash (hashing plugin not provided).');
+    if AArchiveStream = nil then
+      DoOnAddToLog('Cannot compute built-in hash on nil stream.')
+    else
+      DoOnAddToLog('Computing built-in hash on a stream of ' + IntToStr(AArchiveStreamSize) + ' bytes.');
 
     MD5 := TDCP_md5.Create(nil);    //MD5 is already used by ClickerExtraUtils.pas
     try
@@ -468,6 +476,7 @@ begin
       MD5.Free;
     end;
 
+    DoOnAddToLog('Done computing (built-in) hash.');
     Exit;
   end;
 

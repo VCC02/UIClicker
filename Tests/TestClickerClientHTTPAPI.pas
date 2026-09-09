@@ -114,7 +114,9 @@ var
   RecServerAddress: string;
 begin
   inherited SetUp;
-  FLoadClickerClientRes := LoadClickerClient('..\ClickerClient\ClickerClient.dll');
+
+  FLoadClickerClientRes := LoadClickerClient(GetClickerClientPath);
+
   Expect(FLoadClickerClientRes).ToBe(True, 'Can''t load ClickerClient.dll');
 
   InitClickerClient;
