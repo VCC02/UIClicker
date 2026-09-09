@@ -193,7 +193,7 @@ begin
   {$IFDEF Windows}
     Result := ExtractFilePath(ParamStr(0)) + '..\ClickerClient\lib\' + {$IFDEF CPU64} 'x86_64-win64' {$ELSE} 'i386-win32' {$ENDIF} + '\ClickerClient.dll';
   {$ELSE}
-    Result := ExtractFilePath(ParamStr(0)) + '../ClickerClient/lib/' + {$IFDEF CPU64} 'x86_64-linux' {$ELSE} 'i386-linux' {$ENDIF} + '/ClickerClient';
+    Result := ExtractFilePath(ParamStr(0)) + '../ClickerClient/lib/' + {$IFDEF CPU64} 'x86_64-linux' {$ELSE} 'i386-linux' {$ENDIF} + '/ClickerClient.so';
   {$ENDIF}
 end;
 

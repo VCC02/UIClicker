@@ -107,8 +107,8 @@ const
     CPluginPath32BitPrefix = 'i386-win32\';
     CPluginPath64BitPrefix = 'x86_64-win64\';
   {$ELSE}
-    CPluginPath32BitPrefix = 'i386-linux\';
-    CPluginPath64BitPrefix = 'x86_64-linux\';
+    CPluginPath32BitPrefix = 'i386-linux/';
+    CPluginPath64BitPrefix = 'x86_64-linux/';
   {$ENDIF}
 
 implementation
