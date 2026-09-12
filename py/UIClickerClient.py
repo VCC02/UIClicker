@@ -1047,7 +1047,9 @@ class TDllFunctions:
             AppBitness = 'x86_64'
         else:
             AppBitness = 'i386'
-        
+
+        OSBitness = 'UnknownOSBitness'
+
         if '$OSBitness$=win64' in AllVars:
             OSBitness = 'win64'
 
