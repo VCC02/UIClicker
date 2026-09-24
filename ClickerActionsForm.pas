@@ -728,7 +728,7 @@ begin
   colcmbTopLeftInvalid.AutoSelect := True;
   colcmbBotRightInvalid.AutoSelect := True;
 
-  FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', CAppDir + '\ActionTemplates');
+  FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', CAppDir + PathDelim + 'ActionTemplates');
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
 
   lbePathToTemplates.Text := StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
@@ -1082,7 +1082,7 @@ begin
   lblAdminStatus.Show;
 
   FBMPsDir := '';
-  FFullTemplatesDir := 'not set'; //CAppDir + '\ActionTemplates';   s
+  FFullTemplatesDir := 'not set'; //CAppDir + PathDelim + 'ActionTemplates';
   FBuiltInVariables := TStringList.Create;
 
   FInMemFileSystem := TInMemFileSystem.Create;
@@ -1774,7 +1774,7 @@ begin
     if MessageBox(Handle, 'There is a template already loaded. Continue?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
       Exit;
 
-  TemplatePath := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
+  TemplatePath := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + PathDelim;
 
   if PageControlPlayer.ActivePageIndex = 0 then
   begin
@@ -1819,7 +1819,7 @@ begin
     if MessageBox(Handle, 'There is a template already loaded. Continue?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
       Exit;
 
-  TemplatePath := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
+  TemplatePath := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + PathDelim;
 
   if PageControlPlayer.ActivePageIndex = 0 then
   begin
@@ -2020,7 +2020,7 @@ begin
             frmClickerActions.AddToLog('[client] Detected client mode when calling template, level=' + IntToStr(AStackLevel));
 
             //if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path
-            //  NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem})
+            //  NewFrame.LoadTemplate(FFullTemplatesDir + PathDelim + AFileNameToCall{, FileLoc, FInMemFileSystem})
             //else
             //  NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
 
@@ -2030,7 +2030,7 @@ begin
 
               //setting name is required, because NewFrame.LoadTemplate is not supposed to set the filename
               if ExtractFileName(AFileNameToCall) = AFileNameToCall then
-                NewFrame.FileName := FFullTemplatesDir + '\' + AFileNameToCall
+                NewFrame.FileName := FFullTemplatesDir + PathDelim + AFileNameToCall
               else
                 NewFrame.FileName := AFileNameToCall;
 
@@ -2044,7 +2044,7 @@ begin
             end;
 
             if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path   //moved this section from before GetServerFileExpectancy call
-              NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem})
+              NewFrame.LoadTemplate(FFullTemplatesDir + PathDelim + AFileNameToCall{, FileLoc, FInMemFileSystem})
             else
               NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
           end
@@ -2052,9 +2052,9 @@ begin
           begin  //local mode
             if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path
             begin
-              frmClickerActions.AddToLog('[local] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
-              NewFrame.FileName := FFullTemplatesDir + '\' + AFileNameToCall;
-              NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem});
+              frmClickerActions.AddToLog('[local] Loading template: "' + FFullTemplatesDir + PathDelim + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
+              NewFrame.FileName := FFullTemplatesDir + PathDelim + AFileNameToCall;
+              NewFrame.LoadTemplate(FFullTemplatesDir + PathDelim + AFileNameToCall{, FileLoc, FInMemFileSystem});
             end
             else
             begin
@@ -2074,9 +2074,9 @@ begin
           //the current implementation does not allow using files from disk in server mode
           if (ExtractFileName(AFileNameToCall) = AFileNameToCall) and (FileLoc <> flMem) then  //AFileNameToCall does not contain a path
           begin
-            frmClickerActions.AddToLog('[server] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
-            NewFrame.FileName := FFullTemplatesDir + '\' + AFileNameToCall;
-            NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall, FileLoc, FInMemFileSystem);
+            frmClickerActions.AddToLog('[server] Loading template: "' + FFullTemplatesDir + PathDelim + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
+            NewFrame.FileName := FFullTemplatesDir + PathDelim + AFileNameToCall;
+            NewFrame.LoadTemplate(FFullTemplatesDir + PathDelim + AFileNameToCall, FileLoc, FInMemFileSystem);
           end
           else
           begin
@@ -5030,7 +5030,7 @@ begin
       lbePathToTemplates.Text := StringReplace(AOpenDialog.FileName, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
       FullTemplatesDir := lbePathToTemplates.Text;
       if FullTemplatesDir > '' then
-        if FullTemplatesDir[Length(FullTemplatesDir)] = '\' then
+        if FullTemplatesDir[Length(FullTemplatesDir)] = PathDelim then
         begin
           s := FullTemplatesDir;
           Delete(s, Length(s), 1);

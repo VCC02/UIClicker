@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -45,6 +45,7 @@ type
   TMatchingMethods = set of TMatchingMethod;
 
   TFindControlInputData = record
+    Control_Handle: THandle;
     ClassName, Text: string;
     ClassNameSeparator, TextSeparator: string;
     DebugBitmap: TBitmap; //image on debugging tab
@@ -828,7 +829,7 @@ end;
 procedure DbgSaveScreenshotContent(ABmp: TBitmap);
 const
   CScrShotBasePath = ''; /////////////////////////////////// to be updated when used
-  CPath = CScrShotBasePath + '\MultiScrShot\Pic_';
+  CPath = CScrShotBasePath + PathDelim + 'MultiScrShot' + PathDelim + 'Pic_';
   CDestHandle: THandle = 1319400;  //updated, based on debug app
   CMsg = WM_USER + 309;
 var
@@ -891,7 +892,10 @@ begin
   if ImageSource = isScreenshot then
   begin
     if not ACropFromScreenshot then
-      ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+    begin
+      ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height);
+      //MessageBox(0, PChar(IntToStr(CompHandle)), 'ScreenShot Handle (CtrlInt)', 0);   //this should match $Control_Handle$
+    end
     else
     begin
       //The following code is similar to the one from CroppedFullScreenShot, maybe it can be replaced (with minor modifications):
@@ -1552,7 +1556,7 @@ begin
       tp.Y := InputData.CachedControlTop;
 
       if InputData.ImageSource = isScreenshot then
-        CompAtPoint := GetWindowClassRec(tp)
+        CompAtPoint := GetWindowClassRec(tp) //Do not use GetWindowClassRec(InputData.Control_Handle), because caching is based on ControlLeft and ControlTop, not ControlHandle.
       else
       begin
         CompAtPoint.ComponentRectangle.Left := 0;
@@ -1622,7 +1626,12 @@ begin
       tp.Y := InputData.GlobalSearchArea.Top;
 
       if InputData.ImageSource = isScreenshot then
-        CompAtPoint := GetWindowClassRec(tp)
+      begin
+        if InputData.Control_Handle = 0 then
+          CompAtPoint := GetWindowClassRec(tp) //If there are multiple controls at the same point (tp.X, tp.Y), CompAtPoint may end up with another control than that from $Control_Handle$.
+        else                                   //Using GetWindowClassRec(tp) only in case of invalid handle
+          CompAtPoint := GetWindowClassRec(InputData.Control_Handle)
+      end
       else
       begin
         CompAtPoint.ComponentRectangle.Left := 0;
@@ -1630,6 +1639,12 @@ begin
         CompAtPoint.ComponentRectangle.Width := 100;  //Not used. Set to a "valid" value, in case it will be used later.
         CompAtPoint.ComponentRectangle.Height := 100; //Not used. Set to a "valid" value, in case it will be used later.
       end;
+
+      if (CompAtPoint.ComponentRectangle.Left > 3 * Screen.Width) or
+         (CompAtPoint.ComponentRectangle.Top > 3 * Screen.Height) or
+         (CompAtPoint.ComponentRectangle.Left < 0) or
+         (CompAtPoint.ComponentRectangle.Top < 0) then
+        raise Exception.Create('SubControl position is way off screen: ' + IntToStr(CompAtPoint.ComponentRectangle.Left) + ' : ' + IntToStr(CompAtPoint.ComponentRectangle.Top));
 
       CompAtPoint.XOffsetFromParent := 0;
       CompAtPoint.YOffsetFromParent := 0;

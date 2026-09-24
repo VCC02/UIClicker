@@ -128,7 +128,7 @@ begin
   AFileName := UpperCase(StringReplace(AFileName, CAppDirUp, FFullAppDir, [rfReplaceAll]));
   AFileName := UpperCase(StringReplace(AFileName, CTemplateDirUp, TempFullTemplatesDir, [rfReplaceAll]));
 
-  if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
+  if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$ + PathDelim + 'ActionTemplates'
     AFileName := UpperCase(TempFullTemplatesDir + PathDelim + AFileName);
 
   FoundDir := False;
@@ -138,7 +138,7 @@ begin
   begin
     CurrentItem := FListOfAccessibleDirs.Strings[i];  //these are already UpperCase, as set from outside
     if (CurrentItem > '') and (CurrentItem[Length(CurrentItem)] <> PathDelim) then
-      CurrentItem := CurrentItem + PathDelim;  //make sure there are consistent results, regardless of the last '\' existence
+      CurrentItem := CurrentItem + PathDelim;  //make sure there are consistent results, regardless of the last PathDelim existence
 
     if ((Pos(CurrentItem, FilePath) = 1) or (Pos(ExtractFileDir(AFileName), CurrentItem) > 1)) and
        (Pos('..', CurrentItem) = 0) then

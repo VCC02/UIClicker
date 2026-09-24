@@ -6243,7 +6243,7 @@ begin
   FClkActions[AIndexToInsertAt].CallTemplateOptions.EvaluateBeforeCalling := False;
   FClkActions[AIndexToInsertAt].CallTemplateOptions.ListOfCustomVarsAndValues := '';
 
-  if FullTemplatesDir + '\' + ExtractFileName(ATemplateFileName) = ATemplateFileName then
+  if FullTemplatesDir + PathDelim + ExtractFileName(ATemplateFileName) = ATemplateFileName then
     FClkActions[AIndexToInsertAt].CallTemplateOptions.TemplateFileName := ExtractFileName(ATemplateFileName)
   else
     FClkActions[AIndexToInsertAt].CallTemplateOptions.TemplateFileName := ATemplateFileName;
@@ -7540,7 +7540,7 @@ begin
       if FFileName = '' then
         DoOnSetSaveDialogFileName('')
       else
-        DoOnSetSaveDialogFileName(FullTemplatesDir + '\' + FFileName);
+        DoOnSetSaveDialogFileName(FullTemplatesDir + PathDelim + FFileName);
 
       if not DoOnSaveDialogExecute(CTemplateDialogFilter) then
         Exit;
@@ -7594,13 +7594,13 @@ begin
   end
   else
   begin   //local templates dir
-    if not DoOnFileExists(FullTemplatesDir + '\' + FFileName) then
+    if not DoOnFileExists(FullTemplatesDir + PathDelim + FFileName) then
       SaveTemplateWithDialog
     else
     begin
       if LowerCase(ExtractFileExt(FFileName)) <> '.clktmpl' then
         FFileName := FFileName + '.clktmpl';
-      SaveTemplate(FullTemplatesDir + '\' + FFileName);
+      SaveTemplate(FullTemplatesDir + PathDelim + FFileName);
     end;
   end;
 end;
@@ -7638,7 +7638,7 @@ begin
   else
   begin
     if ExtractFileName(FFileName) = FFileName then //no path in here
-      DoOnSetSaveDialogFileName(InitDir + '\' + FFileName)
+      DoOnSetSaveDialogFileName(InitDir + PathDelim + FFileName)
     else
       DoOnSetSaveDialogFileName(FFileName);
   end;

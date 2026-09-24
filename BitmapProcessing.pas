@@ -1529,7 +1529,11 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
 const
-  {%H-}CDebugSubBmpPath = 'E:\SubBmp.bmp';
+  {$IFDEF Windows}
+    {%H-}CDebugSubBmpPath = 'E:\SubBmp.bmp';
+  {$ELSE}
+    {%H-}CDebugSubBmpPath = '/home/$USER/Documents/SubBmp.bmp';
+  {$ENDIF}
 var
   SourceCanvasMat_R, SubCanvasMat_R: PCanvasMat;
   SourceCanvasMat_G, SubCanvasMat_G: PCanvasMat;

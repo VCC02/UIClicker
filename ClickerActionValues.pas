@@ -413,7 +413,7 @@ const
     (Name: 'AllowToFail'; EditorType: etBooleanCombo; DataType: CDTBool),            //Description:  When checked, the execution flow does not stop if the searched (sub)control is not found.  The "Allowed Failed" response can be used for conditional execution (call action).   When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".
     (Name: 'MatchText'; EditorType: etTextWithArrow; DataType: CDTString),             //Description:  Wildcards are available ("*"). Variable replacements are available. Used on matching text and BMP text.   For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.  For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.
     (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + '\<SomeBmp.bmp>
+    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + PathDelim + '<SomeBmp.bmp>
     (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
     (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
@@ -3843,7 +3843,7 @@ end;
 
 function GetPropertyHint_FindControl_MatchBitmapFiles: string;
 begin
-  Result := 'Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + '\<SomeBmp.bmp>';
+  Result := 'Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + PathDelim + '<SomeBmp.bmp>';
 end;
 
 
@@ -3857,7 +3857,7 @@ begin
             '- The mbaBruteForceOnGPU option is similar to mbaBruteForce, except that the bitmap matching is done on GPU.' + #13#10 +
             '    There are two implementations, one which requires OpenCL 3.0 or higher and another one, which requires OpenCL 1.2 (this one is slower than running on CPU).' + #13#10 +
             '- When using mbaRenderTextOnly, no bitmap matching is done. This option generates the bitmaps from the available font profiles, using the following format:' + #13#10 +
-               '"ExtMem:\<ActionName>_<ProfileName>.bmp". As an example, the following bmp can be generated in ExtIn-Mem FS: "ExtMem:\RenderTextOnly_Profile [0].bmp".' + #13#10 +
+               '"ExtMem:' + PathDelim + '<ActionName>_<ProfileName>.bmp". As an example, the following bmp can be generated in ExtIn-Mem FS: "ExtMem:\RenderTextOnly_Profile [0].bmp".' + #13#10 +
                'These bitmaps can be used by other FindSubControl actions, either directly or through plugins (with or without pmtv files).';
 end;
 
@@ -3918,7 +3918,7 @@ end;
 
 function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
 begin
-  Result := 'Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + '\<SomeFile.pmtv>';
+  Result := 'Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + PathDelim + '<SomeFile.pmtv>';
 end;
 
 
@@ -4480,7 +4480,7 @@ begin
 
   {$IFDEF MemPlugins}
     Result := Result + #13#10#13#10 +
-              'If this path starts with "Mem:\" (without quotes),' + #13#10 +
+              'If this path starts with "Mem:' + PathDelim + '" (without quotes),' + #13#10 +
               'the plugin and its dbgsym file must exist in the InMem file system for plugins.' + #13#10 +
               'Plugins and their related files can be sent to UIClicker''s InMem FS, via the HTTP API, using the SetMemPluginFile command.' + #13#10#13#10 +
 
@@ -4503,7 +4503,7 @@ begin
               'Ordinary plugins (i.e. non DecDecHash) can access the main FS for plugins, during action execution (via ExecutePlugin function).' + #13#10 +
               'DecDecHash plugins can access their own FSes, and read configuration files, when loaded for decryption, decompression and custom hashing.' + #13#10 +
               'The reason to extract all .dbgsym files to the same FS, is because a new FS is allocated on every request, so less FSes are used in this way.' + #13#10 +
-              'Upon extraction, files are prefixed with the "Mem:\" string automatically. They should not contain this prefix inside the archive.' + #13#10 +
+              'Upon extraction, files are prefixed with the "Mem:' + PathDelim + '" string automatically. They should not contain this prefix inside the archive.' + #13#10 +
               'An archive uses decryption, decompression and custom hashing, if their respective parameters are set to valid and existing plugin names in SetMemPluginArchiveFile command.' + #13#10 +
               'If these parameters are empty strings, their algorithms are not used. If custom hashing is not used, then the archive is verifyed with MD5.' + #13#10#13#10 +
 

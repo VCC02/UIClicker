@@ -1998,7 +1998,7 @@ begin
   if Fnm = '' then
     Fnm := 'NoTemplate';
 
-  Result := CSelfTemplateDir + '\Screenshots\' + Fnm + '\' + CClkActionStr[AAction] + '.png';
+  Result := CSelfTemplateDir + PathDelim + 'Screenshots' + PathDelim + Fnm + PathDelim + CClkActionStr[AAction] + '.png';
 end;
 
 

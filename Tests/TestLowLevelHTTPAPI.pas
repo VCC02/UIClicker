@@ -1171,6 +1171,9 @@ var
   tk1, tk2: QWord;
   Response: string;
 begin
+  Response := SetVariable(TestServerAddress, '$Control_Handle$', '0', 0); //Without this call, $Control_Handle$ contains the last used handle, which is probably the Actions window.
+  Expect(Response).ToBe('Done', '$Control_Handle$ should be 0 now.');
+
   GenerateFindSubControlOptionsForFullScreenshot(FindSubControlOptions, False);
   FindSubControlOptions.UseFastSearch := False;
   SetLength(FindSubControlOptions.MatchBitmapText, 4);
@@ -1186,12 +1189,18 @@ begin
 
   tk1 := GetTickCount64;
   Response := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'FindTxtOnDesktop_FullDuration', 2000, CREParam_FileLocation_ValueDisk, True);
+  if Pos('$Control_Handle$', Response) = 0 then
+    frmPitstopTestRunner.AddToLog('UIClicker returned "' + Response + '" when executing the first FindSubControl action.');
+
   ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout at "FindTxtOnDesktop_FullDuration" in');
   tk1 := GetTickCount64 - tk1;
 
   FindSubControlOptions.PrecisionTimeout := True;
   tk2 := GetTickCount64;
   Response := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'FindTxtOnDesktop_FastTimeout', 2000, CREParam_FileLocation_ValueDisk, True);
+  if Pos('$Control_Handle$', Response) = 0 then
+    frmPitstopTestRunner.AddToLog('UIClicker returned "' + Response + '" when executing the first FindSubControl action.');
+
   ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout');
   tk2 := GetTickCount64 - tk2;
 

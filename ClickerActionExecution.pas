@@ -180,8 +180,8 @@ type
     function CheckManualStopCondition: Boolean;
 
     procedure ExecuteClickAction(var AClickOptions: TClkClickOptions);
-    function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord): Boolean; //returns True if found
-    function ExecuteFindSubControlAction(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord): Boolean; //returns True if found
+    function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount, AControlHandle: QWord): Boolean; //returns True if found
+    function ExecuteFindSubControlAction(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount, AControlHandle: QWord): Boolean; //returns True if found
     function FillInFindControlInputData(var AFindControlOptions: TClkFindControlOptions; const AActionOptions: TClkActionOptions; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
     function FillInFindSubControlInputDataForGPU(var AFindSubControlOptions: TClkFindSubControlOptions; var FindControlInputData: TFindControlInputData): Boolean;
     function FillInFindSubControlInputData(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
@@ -2549,7 +2549,7 @@ begin
 end;
 
 
-function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord): Boolean; //returns True if found
+function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount, AControlHandle: QWord): Boolean; //returns True if found
 var
   FindControlInputData, WorkFindControlInputData: TFindControlInputData;
   BmpTextProfileCount: Integer; //not used in FindControl
@@ -2568,6 +2568,7 @@ begin
     Exit;
 
   InitFindControlParams(AActionOptions, AOutsideTickCount, ResultedControl, InitialTickCount, Timeout, FindControlInputData, StopAllActionsOnDemandAddr);
+  FindControlInputData.Control_Handle := AControlHandle;
 
   case AFindControlOptions.MatchCriteria.SearchForControlMode of
     sfcmGenGrid:
@@ -2660,7 +2661,7 @@ begin
 end;
 
 
-function TActionExecution.ExecuteFindSubControlAction(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord): Boolean; //returns True if found
+function TActionExecution.ExecuteFindSubControlAction(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount, AControlHandle: QWord): Boolean; //returns True if found
 {$IFDEF FPC}
   //const
   //  clSystemColor = $FF000000;
@@ -2771,6 +2772,7 @@ begin
     Exit;
 
   InitFindControlParams(AActionOptions, AOutsideTickCount, ResultedControl, InitialTickCount, Timeout, FindControlInputData, StopAllActionsOnDemandAddr);
+  FindControlInputData.Control_Handle := AControlHandle;
 
   SetLength(ResultedControlArr_Text, 0);
   SetLength(ResultedControlArr_Bmp, 0);
@@ -3410,6 +3412,7 @@ var
   tk, CurrentActionElapsedTime, OutsideTickCount: QWord;
   AttemptCount: Integer;
   LogMsg: string;
+  TempControlHandle: QWord;
 begin
   tk := GetTickCount64;
   frClickerActions.prbTimeout.Max := AActionOptions.ActionTimeout;
@@ -3421,6 +3424,8 @@ begin
     OutsideTickCount := tk
   else
     OutsideTickCount := 0; //0 means "do not use PrecisionTimeout".
+
+  TempControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), -1);
 
   repeat
     {$IFDEF Windows}
@@ -3448,7 +3453,7 @@ begin
     end;
 
     try
-      Result := ExecuteFindControlAction(AFindControlOptions, AActionOptions, OutsideTickCount);
+      Result := ExecuteFindControlAction(AFindControlOptions, AActionOptions, OutsideTickCount, TempControlHandle);
       //AddToLog('Find(Sub)Control result at attempt no #' + IntToStr(AttemptCount) + ': ' + BoolToStr(Result, 'True', 'False'));
     except
       on E: EBmpMatchTimeout do
@@ -3517,6 +3522,7 @@ var
   tk, CurrentActionElapsedTime, OutsideTickCount: QWord;
   AttemptCount: Integer;
   LogMsg: string;
+  TempControlHandle: QWord;
 begin
   tk := GetTickCount64;
   frClickerActions.prbTimeout.Max := AActionOptions.ActionTimeout;
@@ -3528,6 +3534,8 @@ begin
     OutsideTickCount := tk
   else
     OutsideTickCount := 0; //0 means "do not use PrecisionTimeout".
+
+  TempControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), -1);
 
   repeat
     {$IFDEF Windows}
@@ -3555,7 +3563,7 @@ begin
     end;
 
     try
-      Result := ExecuteFindSubControlAction(AFindSubControlOptions, AActionOptions, OutsideTickCount);
+      Result := ExecuteFindSubControlAction(AFindSubControlOptions, AActionOptions, OutsideTickCount, TempControlHandle);
       //AddToLog('Find(Sub)Control result at attempt no #' + IntToStr(AttemptCount) + ': ' + BoolToStr(Result, 'True', 'False'));
     except
       on E: EBmpMatchTimeout do
@@ -3974,7 +3982,7 @@ begin
       if FFullTemplatesDir = nil then
         raise Exception.Create('FFullTemplatesDir is not assigned.');
 
-      Fnm := FFullTemplatesDir^ + '\' + Fnm;
+      Fnm := FFullTemplatesDir^ + PathDelim + Fnm;
     end;
 
   if FOwnerFrame = nil then
@@ -6871,7 +6879,6 @@ var
   FindControlInputData: TFindControlInputData;
   TxtProfileCount: Integer;
   CompAtPoint: TCompRec;
-  tp: TPoint;
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer;
   MemStream: TMemoryStream;
 begin
@@ -6887,8 +6894,8 @@ begin
     Exit;
   end;
 
-  tp.X := 0; //init here
-  tp.Y := 0;
+  //tp.X := 0; //init here
+  //tp.Y := 0;
 
   AActionOptions := ActionContent^.ActionOptions;
 
@@ -6903,11 +6910,12 @@ begin
     if not FillInFindSubControlInputData(ActionContent^.FindSubControlOptions, AActionOptions, FindControlInputData, TxtProfileCount) then
       Exit;
 
-  tp.X := FindControlInputData.GlobalSearchArea.Left;
-  tp.Y := FindControlInputData.GlobalSearchArea.Top;
+  FindControlInputData.Control_Handle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), -1);
+  //tp.X := FindControlInputData.GlobalSearchArea.Left;
+  //tp.Y := FindControlInputData.GlobalSearchArea.Top;
   AddToLog('Taking screenshot by action: ' + AActionName);
 
-  CompAtPoint := GetWindowClassRec(tp);
+  CompAtPoint := GetWindowClassRec(FindControlInputData.Control_Handle); // GetWindowClassRec(tp);
   CompAtPoint.XOffsetFromParent := 0;
   CompAtPoint.YOffsetFromParent := 0;
 

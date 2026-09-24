@@ -2563,7 +2563,7 @@ begin
   AvailableTemplates := TStringList.Create;
   try
     AvailableTemplates.LineBreak := #13#10;
-    Dir := FFullTemplatesDir + '\*.clktmpl';
+    Dir := FFullTemplatesDir + PathDelim + '*.clktmpl';
 
     SearchResult := FindFirst(Dir, faArchive, ASearchRec);
     try
@@ -5592,7 +5592,7 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := CAppDir + '\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + PathDelim + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     case CurrentlyEditingActionType of
       acLoadSetVarFromFile:
@@ -5652,7 +5652,7 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := CAppDir + '\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + PathDelim + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     MenuData^.TempEditingAction^.PluginOptions.FileName := PathToFileName;
 
@@ -5704,7 +5704,7 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := CAppDir + '\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + PathDelim + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     MenuData^.TempEditingAction^.EditTemplateOptions.TemplateFileName := PathToFileName;
 
@@ -9383,7 +9383,7 @@ begin
       if APropertyIndex = CCallTemplate_TemplateFileName_PropIndex then
       begin
         AFilter := 'Clicker template files (*.clktmpl)|*.clktmpl|All files (*.*)|*.*';
-        AInitDir := ExtractFilePath(ParamStr(0)) + '\ActionTemplates';
+        AInitDir := ExtractFilePath(ParamStr(0)) + 'ActionTemplates';
       end;
 
     else
