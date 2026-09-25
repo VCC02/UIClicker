@@ -116,6 +116,7 @@ type
 
     procedure Test_ExecuteFindSubControlAction_FindIconOnShowActionsWindowButtonGrayscale;
     procedure Test_ExecuteFindSubControlAction_FindShowActionsWindowButtonTextBlur4x;
+    procedure Test_ExecuteFindSubControlAction_FindTextOnOverlappedControls;
 
     procedure Test_FindSubControl_ExternalBackground_isflDisk;
     procedure Test_FindSubControl_ExternalBackground_isflMem;
@@ -1136,6 +1137,92 @@ begin
   FindSubControl.ImageEffectSettings.UseImageEffects := True;
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find "Show Actions Window" text', 3000, CREParam_FileLocation_ValueMem));
   ExpectSuccessfulAction(Response, 'Should find the blurred bmp, on the blurred background.');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_FindTextOnOverlappedControls;
+var
+  FindControl: TClkFindControlOptions;
+  WindowOperations: TClkWindowOperationsOptions;
+  FindSubControl: TClkFindSubControlOptions;
+  BG_Handle_AsFindControl: THandle;
+  BG_Handle_AsFindSubControl: THandle;
+  ExecApp: TClkExecAppOptions;
+
+  procedure RunGradientText;
+  begin
+    GetDefaultPropertyValues_ExecApp(ExecApp);
+    ExecApp.PathToApp := '$AppDir$' + PathDelim + 'Tests' + PathDelim + 'TestFiles' + PathDelim + 'GradientText' + PathDelim + 'GradientText' {$IFDEF Windows} + '.exe' {$ENDIF};
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteExecAppAction(TestServerAddress, ExecApp, 'Run Gradient Text', 5000)));
+  end;
+
+  procedure FindGradientTextWindow;
+  begin
+    GetDefaultPropertyValues_FindControl(FindControl);
+    FindControl.MatchText := 'Gradient Text';
+    FindControl.MatchClassName := 'Window';
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControl, 'Find Gradient Text window', 3000, CREParam_FileLocation_ValueMem)));
+  end;
+
+  procedure BringGradientTextWindowToFront;
+  begin
+    GetDefaultPropertyValues_WindowOperations(WindowOperations);
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteWindowOperationsAction(TestServerAddress, WindowOperations)));
+  end;
+
+  procedure FindBGPanel;
+  begin
+    GetDefaultPropertyValues_FindControl(FindControl);
+    FindControl.MatchText := 'BG';
+    FindControl.MatchClassName := 'Window';
+    FindControl.UseWholeScreen := False;
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControl, 'Find BG panel', 3000, CREParam_FileLocation_ValueMem)));
+  end;
+
+  procedure FindBGTextOnBGPanel;
+  begin
+     GetDefaultPropertyValues_FindSubControl(FindSubControl);
+    FindSubControl.MatchText := 'BG';
+    SetLength(FindSubControl.MatchBitmapText, 1);
+    FindSubControl.MatchBitmapText[0].ForegroundColor := '$Color_WindowText$';
+    FindSubControl.MatchBitmapText[0].BackgroundColor := 'C0DCC0';
+    FindSubControl.MatchBitmapText[0].FontName := 'Segoe UI';    //This will have to be something different on Linux
+    FindSubControl.MatchBitmapText[0].FontSize := 9;
+    FindSubControl.MatchBitmapText[0].FontQuality := fqDefault; //TFontQuality(0)
+    FindSubControl.InitialRectangle.LeftOffset := '5';
+    FindSubControl.InitialRectangle.TopOffset := '6';
+    FindSubControl.InitialRectangle.RightOffset := '-76';
+    FindSubControl.ColorError := '3';
+    FindSubControl.AllowedColorErrorCount := '5';
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find BG text on BG panel', 3000, CREParam_FileLocation_ValueMem)));
+  end;
+
+  procedure CloseGradientText;
+  begin
+    FindGradientTextWindow;  //This updates the $Control_Handle$ var.
+
+    GetDefaultPropertyValues_WindowOperations(WindowOperations);
+    WindowOperations.Operation := woClose;
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteWindowOperationsAction(TestServerAddress, WindowOperations)));
+  end;
+
+begin
+  SetupTargetWindowFor_FindSubControl;
+
+  RunGradientText;
+  try
+    FindGradientTextWindow;
+    BringGradientTextWindowToFront;
+    FindBGPanel;
+    BG_Handle_AsFindControl := StrToIntDef(GetVarValueFromServer('$Control_Handle$', 0), -2);
+
+    FindBGTextOnBGPanel;
+    BG_Handle_AsFindSubControl := StrToIntDef(GetVarValueFromServer('$Control_Handle$', 0), -3);
+
+    Expect(BG_Handle_AsFindSubControl).ToBe(BG_Handle_AsFindControl, 'The FindSubControl handle (' + IntToStr(BG_Handle_AsFindSubControl) + ') does not match the FindControl handle (' + IntToStr(BG_Handle_AsFindControl) + ').');
+  finally
+    CloseGradientText;
+  end;
 end;
 
 

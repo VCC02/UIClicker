@@ -6,6 +6,7 @@ object frmGradientTextMain: TfrmGradientTextMain
   Caption = 'Gradient Text'
   ClientHeight = 636
   ClientWidth = 623
+  Constraints.MinWidth = 623
   LCLVersion = '8.4'
   OnCreate = FormCreate
   object imgGradient: TImage
@@ -13165,6 +13166,7 @@ object frmGradientTextMain: TfrmGradientTextMain
     Height = 234
     Top = 368
     Width = 320
+    Anchors = [akTop, akLeft, akBottom]
     AutoSize = True
   end
   object lblServerLog: TLabel
@@ -13172,13 +13174,12 @@ object frmGradientTextMain: TfrmGradientTextMain
     Height = 15
     Top = 368
     Width = 72
-    Anchors = [akTop, akRight]
     AutoSize = False
     Caption = 'Server log:'
   end
   object memLog: TMemo
     Left = 344
-    Height = 246
+    Height = 217
     Top = 384
     Width = 269
     Anchors = [akTop, akLeft, akRight, akBottom]
@@ -13191,6 +13192,7 @@ object frmGradientTextMain: TfrmGradientTextMain
     Height = 29
     Top = 604
     Width = 139
+    Anchors = [akLeft, akBottom]
     ClientHeight = 29
     ClientWidth = 139
     Color = clYellow
@@ -13262,6 +13264,7 @@ object frmGradientTextMain: TfrmGradientTextMain
     Height = 29
     Top = 604
     Width = 120
+    Anchors = [akLeft, akBottom]
     ClientHeight = 29
     ClientWidth = 120
     Color = clYellow
@@ -13362,6 +13365,58 @@ object frmGradientTextMain: TfrmGradientTextMain
       EA3AC7E743BDE24CB4DF56ABDB5FA1D76998D3728ECF7B85CB867BC88F71C499
       68BF
     }
+    Visible = False
+  end
+  object pnlBG: TPanel
+    Left = 288
+    Height = 29
+    Top = 604
+    Width = 184
+    Anchors = [akLeft, akBottom]
+    Caption = 'BG'
+    ClientHeight = 29
+    ClientWidth = 184
+    Color = clMoneyGreen
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 5
+    object pnlMG: TPanel
+      Left = 0
+      Height = 24
+      Top = 0
+      Width = 29
+      Alignment = taRightJustify
+      Anchors = [akLeft, akBottom]
+      Caption = 'MG'
+      ClientHeight = 24
+      ClientWidth = 29
+      Color = 33023
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 0
+      object pnlFG: TPanel
+        Left = 0
+        Height = 20
+        Top = 0
+        Width = 20
+        Alignment = taRightJustify
+        Anchors = [akLeft, akBottom]
+        Caption = 'FG'
+        Color = clYellow
+        ParentBackground = False
+        ParentColor = False
+        TabOrder = 0
+      end
+    end
+  end
+  object lblBGInfo: TLabel
+    Left = 480
+    Height = 15
+    Hint = 'Used in tets.'
+    Top = 608
+    Width = 138
+    Anchors = [akLeft, akBottom]
+    Caption = 'Leave the BG panel as it is.'
     Visible = False
   end
   object IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool

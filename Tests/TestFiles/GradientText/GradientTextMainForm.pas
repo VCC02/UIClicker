@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: 19 Oct 2023
     initial release date: 19 Oct 2023
 
@@ -53,6 +53,7 @@ type
     imgIcon: TImage;
     imgBrowserRendering: TImage;
     imgGradient: TImage;
+    lblBGInfo: TLabel;
     lblHA: TLabel;
     lblHA1: TLabel;
     lblHB: TLabel;
@@ -68,6 +69,9 @@ type
     lbeServerModePort: TLabeledEdit;
     lblServerInfo: TLabel;
     memLog: TMemo;
+    pnlBG: TPanel;
+    pnlFG: TPanel;
+    pnlMG: TPanel;
     pnlHorizontalLabels1: TPanel;
     pnlHorizontalLabels2: TPanel;
     trbTestTrackBar: TTrackBar;
