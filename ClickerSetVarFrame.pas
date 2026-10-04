@@ -105,6 +105,8 @@ type
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstSetVarKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure vstSetVarKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState
+      );
     procedure vstSetVarMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstSetVarNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -166,7 +168,7 @@ implementation
 
 
 uses
-  AutoCompleteForm, ClickerIconsDM;
+  AutoCompleteForm, ClickerIconsDM, ClickerIniFiles, Clipbrd;
 
 {$R *.frm}
 
@@ -475,6 +477,78 @@ begin
 end;
 
 
+procedure TfrClickerSetVar.vstSetVarKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  Content: TStringList;
+  Ini: TClkIniFile;
+  i, cnt: Integer;
+  Node: PVirtualNode;
+begin
+  if (Key in [Ord('C'), Ord('V'), Ord('X')]) and (ssCtrl in Shift) then
+  begin
+    cnt := 0;
+    Content := TStringList.Create;
+    try
+      if Key = Ord('V') then
+        Content.Text := Clipboard.AsText;
+
+      Ini := TClkIniFile.Create(Content);
+      try
+        if Key in [Ord('C'), Ord('X')] then
+        begin
+          Node := vstSetVar.GetFirstSelected;
+          if Node = nil then
+            Exit;
+
+          repeat
+            if vstSetVar.Selected[Node] then
+            begin
+              Ini.WriteString('SetVar', 'Vars_' + IntToStr(cnt), FSetVarContent_Vars[Node^.Index]);
+              Ini.WriteString('SetVar', 'Values_' + IntToStr(cnt), FSetVarContent_Values[Node^.Index]);
+              Ini.WriteString('SetVar', 'EvalBefore_' + IntToStr(cnt), FSetVarContent_EvalBefore[Node^.Index]);
+              Inc(cnt);
+            end;
+
+            Node := vstSetVar.GetNextSelected(Node);
+          until Node = nil;
+
+          Ini.WriteInteger('SetVar', 'Count', cnt);
+          // no need to call Ini.Update...;
+          Ini.GetFileContent(Content);
+          Clipboard.AsText := Content.Text;
+
+          if Key = Ord('X') then
+            RemoveSetVar;
+        end; //Copy / Cut
+
+        if Key = Ord('V') then
+        begin
+          for i := 0 to Ini.ReadInteger('SetVar', 'Count', 0) - 1 do
+          begin
+            FSetVarContent_Vars.Add(Ini.ReadString('SetVar', 'Vars_' + IntToStr(i), '$var$'));
+            FSetVarContent_Values.Add(Ini.ReadString('SetVar', 'Values_' + IntToStr(i), 'value'));
+            FSetVarContent_EvalBefore.Add(Ini.ReadString('SetVar', 'EvalBefore_' + IntToStr(i), '0'));
+          end;
+
+          if Integer(vstSetVar.RootNodeCount) <> FSetVarContent_Vars.Count then
+          begin
+            vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
+            UpdateVstCheckStates;
+            vstSetVar.Repaint;
+            DoOnTriggerOnControlsModified;
+          end;
+        end; //Paste
+      finally
+        Ini.Free;
+      end;
+    finally
+      Content.Free;
+    end;
+  end;
+end;
+
+
 procedure TfrClickerSetVar.vstSetVarMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -524,12 +598,17 @@ begin
     Exit;
   end;
 
-  if MessageBox(Handle, 'Are you sure you want to remove the selected item?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
-    Exit;
+  Node := vstSetVar.GetLast;
+  repeat
+    if vstSetVar.Selected[Node] then
+    begin
+      FSetVarContent_Vars.Delete(Node^.Index);
+      FSetVarContent_Values.Delete(Node^.Index);
+      FSetVarContent_EvalBefore.Delete(Node^.Index);
+    end;
 
-  FSetVarContent_Vars.Delete(Node^.Index);
-  FSetVarContent_Values.Delete(Node^.Index);
-  FSetVarContent_EvalBefore.Delete(Node^.Index);
+    Node := vstSetVar.GetPrevious(Node);
+  until Node = nil;
 
   vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
   UpdateVstCheckStates;
@@ -606,6 +685,9 @@ end;
 
 procedure TfrClickerSetVar.MenuItem_RemoveSetVarClick(Sender: TObject);
 begin
+  if MessageBox(Handle, 'Are you sure you want to remove the selected item(s)?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
   RemoveSetVar;
 end;
 
@@ -748,6 +830,9 @@ end;
 
 procedure TfrClickerSetVar.spdbtnRemoveSelectedVariableClick(Sender: TObject);
 begin
+  if MessageBox(Handle, 'Are you sure you want to remove the selected item(s)?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
   RemoveSetVar;
 end;
 

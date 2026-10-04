@@ -79,7 +79,7 @@ object frClickerSetVar: TfrClickerSetVar
       TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit]
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowRoot, toThemeAware, toUseBlendedImages]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toMiddleClickSelect, toRightClickSelect]
+      TreeOptions.SelectionOptions = [toFullRowSelect, toMiddleClickSelect, toMultiSelect, toRightClickSelect]
       OnChecked = vstSetVarChecked
       OnChecking = vstSetVarChecking
       OnCreateEditor = vstSetVarCreateEditor
@@ -91,6 +91,7 @@ object frClickerSetVar: TfrClickerSetVar
       OnGetImageIndex = vstSetVarGetImageIndex
       OnInitNode = vstSetVarInitNode
       OnKeyDown = vstSetVarKeyDown
+      OnKeyUp = vstSetVarKeyUp
       OnMouseUp = vstSetVarMouseUp
       OnNewText = vstSetVarNewText
     end

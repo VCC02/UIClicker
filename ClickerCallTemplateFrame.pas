@@ -35,7 +35,7 @@ uses
     LCLIntf, LCLType,
   {$ENDIF}
   Classes, SysUtils, Forms, Controls, StdCtrls, Menus, ExtCtrls,
-  ValEdit, Buttons, VirtualTrees, ClickerUtils, Graphics;
+  Buttons, VirtualTrees, ClickerUtils, Graphics;
 
 type
 
@@ -52,7 +52,6 @@ type
     spdbtnNewVariable: TSpeedButton;
     spdbtnRemoveSelectedVariable: TSpeedButton;
     tmrEditCustomVars: TTimer;
-    vallstCustomVariables: TValueListEditor;
     vstCustomVariables: TVirtualStringTree;
     procedure AddCustomVarRow1Click(Sender: TObject);
     procedure RemoveCustomVarRow1Click(Sender: TObject);
@@ -76,6 +75,8 @@ type
       var CellText: String);
     procedure vstCustomVariablesKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure vstCustomVariablesKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure vstCustomVariablesMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstCustomVariablesNewText(Sender: TBaseVirtualTree;
@@ -89,6 +90,9 @@ type
     FCustomVarsUpdatedVstText: Boolean;
     FTextEditorEditBox: TEdit;  //pointer to the built-in editor
 
+    FCallTemplateContent_Vars: TStringList;
+    FCallTemplateContent_Values: TStringList;
+
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
 
     procedure DoOnTriggerOnControlsModified;
@@ -97,6 +101,7 @@ type
     procedure RemoveVar;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
     function GetListOfCustomVariables: string;
     procedure SetListOfCustomVariables(Value: string);
@@ -110,7 +115,7 @@ implementation
 {$R *.frm}
 
 uses
-  ClickerIconsDM;
+  ClickerIconsDM, ClickerIniFiles, Clipbrd;
 
 { TfrClickerCallTemplate }
 
@@ -119,7 +124,20 @@ constructor TfrClickerCallTemplate.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
+  FCallTemplateContent_Vars := TStringList.Create;
+  FCallTemplateContent_Values := TStringList.Create;
+  FCallTemplateContent_Vars.LineBreak := #13#10;
+  FCallTemplateContent_Values.LineBreak := #13#10;
   FOnTriggerOnControlsModified := nil;
+end;
+
+
+destructor TfrClickerCallTemplate.Destroy;
+begin
+  FreeAndNil(FCallTemplateContent_Vars);
+  FreeAndNil(FCallTemplateContent_Values);
+
+  inherited Destroy;
 end;
 
 
@@ -133,18 +151,38 @@ end;
 
 
 function TfrClickerCallTemplate.GetListOfCustomVariables: string;
+var
+  i: Integer;
 begin
-  Result := vallstCustomVariables.Strings.Text;
+  Result := '';
+  for i := 0 to FCallTemplateContent_Vars.Count - 1 do
+    Result := Result + FCallTemplateContent_Vars.Strings[i] + '=' + FCallTemplateContent_Values.Strings[i] + #13#10;
 end;
 
 
 procedure TfrClickerCallTemplate.SetListOfCustomVariables(Value: string);
+var
+  TempList: TStringList;
+  i: Integer;
 begin
-  //if vallstCustomVariables.Strings.Text <> Value then  //For some reason, this has to stay commented. Otherwise, it won't update the tree.
-  begin
-    vallstCustomVariables.Strings.Text := Value;
-    vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
+  TempList := TStringList.Create;
+  try
+    TempList.LineBreak := #13#10;
+    TempList.Text := Value;
+
+    FCallTemplateContent_Vars.Clear;
+    FCallTemplateContent_Values.Clear;
+
+    for i := 0 to TempList.Count - 1 do
+    begin
+      FCallTemplateContent_Vars.Add(TempList.Names[i]);
+      FCallTemplateContent_Values.Add(TempList.ValueFromIndex[i]);
+    end;
+
+    vstCustomVariables.RootNodeCount := TempList.Count;
     vstCustomVariables.Repaint;
+  finally
+    TempList.Free;
   end;
 end;
 
@@ -179,10 +217,13 @@ end;
 
 procedure TfrClickerCallTemplate.AddNewVariable;
 begin
-  vallstCustomVariables.Strings.Add('');
-  vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
+  FCallTemplateContent_Vars.Add('');
+  FCallTemplateContent_Values.Add('');
+
+  vstCustomVariables.RootNodeCount := FCallTemplateContent_Vars.Count;
   vstCustomVariables.Repaint;
 
+  vstCustomVariables.ClearSelection;
   vstCustomVariables.Selected[vstCustomVariables.GetLast] := True;
 
   DoOnTriggerOnControlsModified;
@@ -194,9 +235,6 @@ var
   Node: PVirtualNode;
 begin
   try
-    //if MessageBox(Handle, PChar('Remove variable?' + #13#10 + vallstCustomVariables.Strings[vallstCustomVariables.Selection.Top - 1]), 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
-    //  Exit;
-
     Node := vstCustomVariables.GetFirstSelected;
 
     if Node = nil then
@@ -205,13 +243,18 @@ begin
       Exit;
     end;
 
-    if MessageBox(Handle, PChar('Remove variable?' + #13#10 + vallstCustomVariables.Strings[Node^.Index]), 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
-      Exit;
+    Node := vstCustomVariables.GetLast;
+    repeat
+      if vstCustomVariables.Selected[Node] then
+      begin
+        FCallTemplateContent_Vars.Delete(Node^.Index);
+        FCallTemplateContent_Values.Delete(Node^.Index);
+      end;
 
-    //vallstCustomVariables.Strings.Delete(vallstCustomVariables.Selection.Top - 1);
-    vallstCustomVariables.Strings.Delete(Node^.Index);
+      Node := vstCustomVariables.GetPrevious(Node);
+    until Node = nil;
 
-    vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
+    vstCustomVariables.RootNodeCount := FCallTemplateContent_Vars.Count;
     vstCustomVariables.Repaint;
     DoOnTriggerOnControlsModified;
   except
@@ -227,6 +270,9 @@ end;
 
 procedure TfrClickerCallTemplate.RemoveCustomVarRow1Click(Sender: TObject);
 begin
+  if MessageBox(Handle, 'Remove selected variable(s)?', 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
   RemoveVar;
 end;
 
@@ -239,7 +285,8 @@ begin
   if (Node = nil) or (Node = vstCustomVariables.GetFirst) or (vstCustomVariables.RootNodeCount = 1) then
     Exit;
 
-  vallstCustomVariables.Strings.Move(Node^.Index, Node^.Index - 1);
+  FCallTemplateContent_Vars.Move(Node^.Index, Node^.Index - 1);
+  FCallTemplateContent_Values.Move(Node^.Index, Node^.Index - 1);
 
   //UpdateNodeCheckStateFromEvalBefore(Node^.PrevSibling);   //uncomment these if there will ever be individual evaluations
   //UpdateNodeCheckStateFromEvalBefore(Node);
@@ -260,7 +307,8 @@ begin
   if (Node = nil) or (Node = vstCustomVariables.GetLast) or (vstCustomVariables.RootNodeCount = 1) then
     Exit;
 
-  vallstCustomVariables.Strings.Move(Node^.Index, Node^.Index + 1);
+  FCallTemplateContent_Vars.Move(Node^.Index, Node^.Index + 1);
+  FCallTemplateContent_Values.Move(Node^.Index, Node^.Index + 1);
 
   //UpdateNodeCheckStateFromEvalBefore(Node^.NextSibling);    //uncomment these if there will ever be individual evaluations
   //UpdateNodeCheckStateFromEvalBefore(Node);
@@ -282,6 +330,9 @@ end;
 procedure TfrClickerCallTemplate.spdbtnRemoveSelectedVariableClick(
   Sender: TObject);
 begin
+  if MessageBox(Handle, 'Remove selected variable(s)?', 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
   RemoveVar;
 end;
 
@@ -294,8 +345,6 @@ end;
 
 procedure TfrClickerCallTemplate.vstCustomVariablesEdited(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-var
-  NewLine: string;
 begin
   if FCustomVarsMouseUpHitInfo.HitNode = nil then
     Exit;
@@ -312,20 +361,18 @@ begin
          (FCustomVarsEditingText[Length(FCustomVarsEditingText)] <> '$') then
         dmClickerIcons.DisplayVarFormatNotifier(FTextEditorEditBox.Handle);
 
-      NewLine := FCustomVarsEditingText + '=' + vallstCustomVariables.Strings.ValueFromIndex[Node^.Index];
-
-      if vallstCustomVariables.Strings.Strings[Node^.Index] <> NewLine then
+      if FCallTemplateContent_Vars.Strings[Node^.Index] <> FCustomVarsEditingText then
       begin
-        vallstCustomVariables.Strings.Strings[Node^.Index] := NewLine;
+        FCallTemplateContent_Vars.Strings[Node^.Index] := FCustomVarsEditingText;
         DoOnTriggerOnControlsModified;
       end;
     end;
 
     1:
     begin
-      if vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] <> FCustomVarsEditingText then
+      if FCallTemplateContent_Values.Strings[Node^.Index] <> FCustomVarsEditingText then
       begin
-        vallstCustomVariables.Strings.Strings[Node^.Index] := vallstCustomVariables.Strings.Names[Node^.Index] + '=' + FCustomVarsEditingText; //vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] := FCustomVarsEditingText; //Do not set ValueFromIndex !!!
+        FCallTemplateContent_Values.Strings[Node^.Index] := FCustomVarsEditingText;
         DoOnTriggerOnControlsModified;
       end;
     end;
@@ -357,8 +404,8 @@ procedure TfrClickerCallTemplate.vstCustomVariablesGetText(
 begin
   try
     case Column of
-      0: CellText := vallstCustomVariables.Strings.Names[Node^.Index];
-      1: CellText := vallstCustomVariables.Strings.ValueFromIndex[Node^.Index];
+      0: CellText := FCallTemplateContent_Vars.Strings[Node^.Index];
+      1: CellText := FCallTemplateContent_Values.Strings[Node^.Index];
     end;
   except
     CellText := 'bug';
@@ -371,6 +418,75 @@ procedure TfrClickerCallTemplate.vstCustomVariablesKeyDown(Sender: TObject;
 begin
   if Key = VK_DELETE then
     RemoveCustomVarRow1Click(RemoveCustomVarRow1);
+end;
+
+
+procedure TfrClickerCallTemplate.vstCustomVariablesKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  Content: TStringList;
+  Ini: TClkIniFile;
+  i, cnt: Integer;
+  Node: PVirtualNode;
+begin
+  if (Key in [Ord('C'), Ord('V'), Ord('X')]) and (ssCtrl in Shift) then
+  begin
+    cnt := 0;
+    Content := TStringList.Create;
+    try
+      if Key = Ord('V') then
+        Content.Text := Clipboard.AsText;
+
+      Ini := TClkIniFile.Create(Content);
+      try
+        if Key in [Ord('C'), Ord('X')] then
+        begin
+          Node := vstCustomVariables.GetFirstSelected;
+          if Node = nil then
+            Exit;
+
+          repeat
+            if vstCustomVariables.Selected[Node] then
+            begin                                           //using 'SetVar' section name, for compatibility with SetVar action
+              Ini.WriteString('SetVar', 'Vars_' + IntToStr(cnt), FCallTemplateContent_Vars[Node^.Index]);
+              Ini.WriteString('SetVar', 'Values_' + IntToStr(cnt), FCallTemplateContent_Values[Node^.Index]);
+              Inc(cnt);
+            end;
+
+            Node := vstCustomVariables.GetNextSelected(Node);
+          until Node = nil;
+
+          Ini.WriteInteger('SetVar', 'Count', cnt);
+          // no need to call Ini.Update...;
+          Ini.GetFileContent(Content);
+          Clipboard.AsText := Content.Text;
+
+          if Key = Ord('X') then
+            RemoveVar;
+        end; //Copy / Cut
+
+        if Key = Ord('V') then
+        begin
+          for i := 0 to Ini.ReadInteger('SetVar', 'Count', 0) - 1 do
+          begin
+            FCallTemplateContent_Vars.Add(Ini.ReadString('SetVar', 'Vars_' + IntToStr(i), '$var$'));
+            FCallTemplateContent_Values.Add(Ini.ReadString('SetVar', 'Values_' + IntToStr(i), 'value'));
+          end;
+
+          if Integer(vstCustomVariables.RootNodeCount) <> FCallTemplateContent_Vars.Count then
+          begin
+            vstCustomVariables.RootNodeCount := FCallTemplateContent_Vars.Count;
+            vstCustomVariables.Repaint;
+            DoOnTriggerOnControlsModified;
+          end;
+        end; //Paste
+      finally
+        Ini.Free;
+      end;
+    finally
+      Content.Free;
+    end;
+  end;
 end;
 
 
@@ -394,7 +510,7 @@ procedure TfrClickerCallTemplate.vstCustomVariablesPaintText(
   Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType);
 begin
-  if Pos(#4#5, vallstCustomVariables.Strings[Node^.Index]) > 0 then
+  if Pos(#4#5, FCallTemplateContent_Vars.Strings[Node^.Index] + '=' + FCallTemplateContent_Values.Strings[Node^.Index]) > 0 then
     TargetCanvas.Font.Color := clRed
   else
     TargetCanvas.Font.Color := clWindowText;

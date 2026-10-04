@@ -56,7 +56,7 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit]
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnDblClick]
     TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages]
-    TreeOptions.SelectionOptions = [toFullRowSelect]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect]
     OnCreateEditor = vstCustomVariablesCreateEditor
     OnDblClick = vstCustomVariablesDblClick
     OnEdited = vstCustomVariablesEdited
@@ -65,34 +65,9 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     OnPaintText = vstCustomVariablesPaintText
     OnGetImageIndex = vstCustomVariablesGetImageIndex
     OnKeyDown = vstCustomVariablesKeyDown
+    OnKeyUp = vstCustomVariablesKeyUp
     OnMouseUp = vstCustomVariablesMouseUp
     OnNewText = vstCustomVariablesNewText
-  end
-  object vallstCustomVariables: TValueListEditor
-    Left = 3
-    Height = 150
-    Hint = 'These variables are passed to the called template. Right-click for adding/removing.'
-    Top = 58
-    Width = 366
-    Color = 13828080
-    DefaultColWidth = 180
-    FixedCols = 0
-    ParentShowHint = False
-    PopupMenu = pmCustomVars
-    RowCount = 2
-    ShowHint = True
-    TabOrder = 1
-    Visible = False
-    DisplayOptions = [doColumnTitles, doKeyColFixed]
-    KeyOptions = [keyEdit, keyUnique]
-    TitleCaptions.Strings = (
-      'Variable'
-      'Value'
-    )
-    ColWidths = (
-      180
-      140
-    )
   end
   object spdbtnMoveUp: TSpeedButton
     Left = 3
