@@ -5226,6 +5226,7 @@ var
   NodeLevel, Indent: Integer;
   CurrentAction: PClkActionRec;
   NodeData: PActionNodeRec;
+  i: Integer;
 begin
   FActionsHitTimeStamp := GetTickCount64; //required on MouseUp
   FPreviousSelectedNode := vstActions.GetFirstSelected;
@@ -5237,6 +5238,15 @@ begin
   Indent := vstActions.Indent;
   MinImgX := 24 + ColumnOffSet + Indent;
   MaxImgX := 48 + ColumnOffSet + Indent;
+
+  for i := 0 to vstActions.Header.Columns.Count - 1 do
+    if (coVisible in vstActions.Header.Columns.Items[i].Options) and (i <> 6) then  //do not add again column [6]
+      if vstActions.Header.Columns.Items[i].Position < vstActions.Header.Columns.Items[0].Position then
+      begin
+        Inc(MinImgX, vstActions.Header.Columns.Items[i].Width);
+        Inc(MaxImgX, vstActions.Header.Columns.Items[i].Width);
+      end;
+
   NodeLevel := 0;
   if FActionsHitInfo.HitNode <> nil then
   begin
