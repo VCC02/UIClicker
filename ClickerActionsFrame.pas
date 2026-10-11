@@ -8232,7 +8232,7 @@ begin
     end;
 
     if (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) and
-       not AEditingAction^.FindSubControlOptions.UseTextRenderingInBrowser then
+       not AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser then
     begin
       TargetCanvas.Font.Color := clGray;
       Exit;

@@ -105,8 +105,7 @@ try:
     FindControlOptions.CropFromScreenshot = True
     FindControlOptions.ThreadCount = "30"
 
-    FindControlOptions.UseTextRenderingInBrowser = True
-
+    FindControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser = True
     FindControlOptions.RenderingInBrowserSettings.RenderingRequestType = TRenderingRequestType.rrtAction
     FindControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout = 1234
     FindControlOptions.RenderingInBrowserSettings.ActionForSendingRequest = 'SenderAction'

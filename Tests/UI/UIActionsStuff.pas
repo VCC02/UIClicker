@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -176,7 +176,7 @@ begin
   FindSubControlOptions.MatchBitmapText[3].FontName := 'Courier New';
   FindSubControlOptions.MatchBitmapText[3].FontSize := 60;
   FindSubControlOptions.MatchBitmapText[3].ProfileName := 'Profile [3]';
-  FindSubControlOptions.UseTextRenderingInBrowser := True;
+  FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := True;
   FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3010;
 
   ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(AUIClickerAddress, FindSubControlOptions, 'FindSubControl', 3000, CREParam_FileLocation_ValueMem)));

@@ -249,8 +249,8 @@ begin
     ACustomActions[i].FindSubControlOptions.EvaluateTextCount := '-1';
     ACustomActions[i].FindSubControlOptions.CropFromScreenshot := False;
     ACustomActions[i].FindSubControlOptions.ThreadCount := '2';
-    ACustomActions[i].FindSubControlOptions.UseTextRenderingInBrowser := False;
 
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := False;
     ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtShellExecute;
     ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3000;
     ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := '';
@@ -628,8 +628,8 @@ begin
   AFindSubControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
   AFindSubControlOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'CropFromScreenshot', False);
   AFindSubControlOptions.ThreadCount := Ini.ReadString(SectionIndex, 'ThreadCount', '2');
-  AFindSubControlOptions.UseTextRenderingInBrowser := Ini.ReadBool(SectionIndex, 'UseTextRenderingInBrowser', False);
 
+  AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := Ini.ReadBool(SectionIndex, 'RenderingInBrowserSettings.UseTextRenderingInBrowser', Ini.ReadBool(SectionIndex, 'UseTextRenderingInBrowser', False)); //The default is not a boolean, but an attempt to read from the old propery, which was outside of the RenderingInBrowserSettings structure
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(Ord(Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.RenderingRequestType', 0)));
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.ReceivingBitmapsTimeout', 3000);
   AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := Ini.ReadString(SectionIndex, 'RenderingInBrowserSettings.ActionForSendingRequest', '');
@@ -1193,8 +1193,8 @@ begin
   AStringList.Add('EvaluateTextCount=' + AActionFindSubControlOptions.EvaluateTextCount);
   AStringList.Add('CropFromScreenshot=' + IntToStr(Ord(AActionFindSubControlOptions.CropFromScreenshot)));
   AStringList.Add('ThreadCount=' + AActionFindSubControlOptions.ThreadCount);
-  AStringList.Add('UseTextRenderingInBrowser=' + IntToStr(Ord(AActionFindSubControlOptions.UseTextRenderingInBrowser)));
 
+  AStringList.Add('RenderingInBrowserSettings.UseTextRenderingInBrowser=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser)));
   AStringList.Add('RenderingInBrowserSettings.RenderingRequestType=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType)));
   AStringList.Add('RenderingInBrowserSettings.ReceivingBitmapsTimeout=' + IntToStr(AActionFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout));
   AStringList.Add('RenderingInBrowserSettings.ActionForSendingRequest=' + AActionFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest);
@@ -1464,7 +1464,6 @@ begin
   ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
   ADest.CropFromScreenshot := ASrc.CropFromScreenshot;
   ADest.ThreadCount := ASrc.ThreadCount;
-  ADest.UseTextRenderingInBrowser := ASrc.UseTextRenderingInBrowser;
   ADest.RenderingInBrowserSettings := ASrc.RenderingInBrowserSettings;
   ADest.GPUSettings := ASrc.GPUSettings;
   ADest.ImageEffectSettings := ASrc.ImageEffectSettings;

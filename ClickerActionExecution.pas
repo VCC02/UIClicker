@@ -2783,10 +2783,10 @@ begin
   try
     if AFindSubControlOptions.MatchCriteria.WillMatchBitmapText then
     begin
-      if AFindSubControlOptions.UseTextRenderingInBrowser then
+      if AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser then
         EnterCriticalSection(FBrowserRenderingText.CritSec);
       try
-        if AFindSubControlOptions.UseTextRenderingInBrowser then
+        if AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser then
         begin
           FBrowserRenderingText.Txt := AFindSubControlOptions.MatchText;
           SetLength(FBrowserRenderingText.FontProfiles, Length(AFindSubControlOptions.MatchBitmapText));
@@ -2930,7 +2930,7 @@ begin
               // frClickerActions.frClickerFindControl.PreviewText;
 
               try
-                if not AFindSubControlOptions.UseTextRenderingInBrowser then
+                if not AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser then
                   PreviewTextOnBmp(AFindSubControlOptions, FindControlInputData.Text, j, FindControlInputData.BitmapToSearchFor)
                 else
                   if not DoOnLoadRenderedBitmap(FindControlInputData.BitmapToSearchFor, FBrowserRenderingText.RenderedFileNames[j]) then
@@ -3048,7 +3048,7 @@ begin
           AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
         end;
       finally
-        if AFindSubControlOptions.UseTextRenderingInBrowser then
+        if AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser then
         begin
           AddToLog('Deleting received rendered bitmaps from In-Mem FS.  StackLevel: ' + IntToStr(FStackLevel^));
           for j := 0 to Length(FBrowserRenderingText.RenderedFileNames) - 1 do

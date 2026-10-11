@@ -62,7 +62,7 @@ const
   CPropCount_Click = 27;
   CPropCount_ExecApp = 9;
   CPropCount_FindControl = 16;
-  CPropCount_FindSubControl = 36;
+  CPropCount_FindSubControl = 35;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -104,7 +104,7 @@ const
   CPropCount_FindSubControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindSubControlInitialRectangle = 8;
   CPropCount_FindSubControlMatchByHistogramSettings = 3;
-  CPropCount_FindSubControlRenderingInBrowserSettings = 6;
+  CPropCount_FindSubControlRenderingInBrowserSettings = 7;
   CPropCount_FindSubControlGPUSettings = 6;
   CPropCount_FindSubControlImageEffectSettings = 3;
 
@@ -186,11 +186,10 @@ const
   CFindSubControl_EvaluateTextCount_PropIndex = 28;
   CFindSubControl_CropFromScreenshot_PropIndex = 29;
   CFindSubControl_ThreadCount_PropIndex = 30;
-  CFindSubControl_UseTextRenderingInBrowser_PropIndex = 31;
-  CFindSubControl_RenderingInBrowserSettings_PropIndex = 32;
-  CFindSubControl_GPUSettings_PropIndex = 33;
-  CFindSubControl_ImageEffectSettings_PropIndex = 34;
-  CFindSubControl_AttemptCount_PropIndex = 35;
+  CFindSubControl_RenderingInBrowserSettings_PropIndex = 31;
+  CFindSubControl_GPUSettings_PropIndex = 32;
+  CFindSubControl_ImageEffectSettings_PropIndex = 33;
+  CFindSubControl_AttemptCount_PropIndex = 34;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -254,12 +253,13 @@ const
   CFindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp_PropItemIndex = 1;
   CFindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex = 2;
 
-  CFindSubControl_RenderingInBrowserSettings_RenderingRequestType_PropItemIndex = 0;
-  CFindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout_PropItemIndex = 1;
-  CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex = 2;
-  CFindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps_PropItemIndex = 3;
-  CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex = 4;
-  CFindSubControl_RenderingInBrowserSettings_FontSizeUnit_PropItemIndex = 5;
+  CFindSubControl_RenderingInBrowserSettings_UseTextRenderingInBrowser_PropIndex = 0;
+  CFindSubControl_RenderingInBrowserSettings_RenderingRequestType_PropItemIndex = 1;
+  CFindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout_PropItemIndex = 2;
+  CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex = 3;
+  CFindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps_PropItemIndex = 4;
+  CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex = 5;
+  CFindSubControl_RenderingInBrowserSettings_FontSizeUnit_PropItemIndex = 6;
 
   CFindSubControl_GPUSettings_OpenCLPath_PropItemIndex = 0;
   CFindSubControl_GPUSettings_TargetPlatform_PropItemIndex = 1;
@@ -440,7 +440,6 @@ const
     (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString),
-    (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'GPUSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'ImageEffectSettings'; EditorType: etNone; DataType: CDTStructure),
@@ -528,6 +527,7 @@ const
     );
 
     CFindSubControl_RenderingInBrowserSettingsProperties: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of TOIPropDef = (
+      (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'RenderingRequestType'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'ReceivingBitmapsTimeout'; EditorType: etSpinText; DataType: CDTInteger),
       (Name: 'ActionForSendingRequest'; EditorType: etTextWithArrow; DataType: CDTString),
@@ -868,7 +868,6 @@ const
     nil, //EvaluateTextCount
     nil, //CropFromScreenshot
     nil, //ThreadCount
-    nil, //UseTextRenderingInBrowser
     GetActionValueStr_FindSubControl_RenderingInBrowserSettings,  //RenderingInBrowserSettings
     GetActionValueStr_FindSubControl_GPUSettings,  //GPUSettings
     GetActionValueStr_FindSubControl_ImageEffectSettings,  //ImageEffectSettings
@@ -985,7 +984,6 @@ const
     0, //EvaluateTextCount
     0, //CropFromScreenshot
     0, //ThreadCount
-    0, //UseTextRenderingInBrowser
     0, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     0, //GPUSettings: TGPUSettings;
     0, //ImageEffectSettings: TImageEffectSettings;
@@ -1135,6 +1133,7 @@ const
     );
 
     CFindSubControl_RenderingInBrowserSettingsEnumCounts: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of Integer = (
+      0, //UseTextRenderingInBrowser
       Ord(High(TRenderingRequestType)) + 1, //RenderingRequestType: TRenderingRequestType;
       0, //ReceivingBitmapsTimeout: Integer;
       0, //ActionForSendingRequest: string;
@@ -1271,7 +1270,6 @@ const
     nil, //EvaluateTextCount
     nil, //CropFromScreenshot
     nil, //ThreadCount
-    nil, //UseTextRenderingInBrowser
     nil, //RenderingInBrowserSettings
     nil, //GPUSettings
     nil, //ImageEffectSettings
@@ -1419,6 +1417,7 @@ const
     );
 
     CFindControl_RenderingInBrowserSettingsEnumStrings: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of PArrayOfString = (
+      nil, //UseTextRenderingInBrowser
       @CRenderingRequestTypeStr, //RenderingRequestType: TRenderingRequestType;
       nil, //ReceivingBitmapsTimeout: Integer;
       nil, //ActionForSendingRequest: string;
@@ -1561,7 +1560,6 @@ const
     0, //EvaluateTextCount
     0, //CropFromScreenshot
     0, //ThreadCount
-    0, //UseTextRenderingInBrowser
     1, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     1, //GPUSettings: TGPUSettings;
     1, //ImageEffectSettings: TImageEffectSettings;
@@ -1724,7 +1722,6 @@ function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
 function GetPropertyHint_FindControl_EvaluateTextCount: string;
 function GetPropertyHint_FindControl_CropFromScreenshot: string;
 function GetPropertyHint_FindControl_ThreadCount: string;
-function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
 function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
 function GetPropertyHint_FindControl_GPUSettings: string;
 function GetPropertyHint_FindControl_ImageEffectSettings: string;
@@ -1751,6 +1748,7 @@ function GetPropertyHint_FindControl_AttemptCount: string;
 {$ENDIF}
 
 {$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UseTextRenderingInBrowser: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ActionForSendingRequest: string;
@@ -1942,7 +1940,6 @@ const
     @GetPropertyHint_FindControl_EvaluateTextCount, //EvaluateTextCount: string;
     @GetPropertyHint_FindControl_CropFromScreenshot, //CropFromScreenshot: Boolean;
     @GetPropertyHint_FindControl_ThreadCount, //ThreadCount: string;
-    @GetPropertyHint_FindControl_UseTextRenderingInBrowser, //UseTextRenderingInBrowser: string;
     @GetPropertyHint_FindControl_RenderingInBrowserSettings, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     @GetPropertyHint_FindControl_GPUSettings,  //GPUSettings: TGPUSettings;
     @GetPropertyHint_FindControl_ImageEffectSettings,  //ImageEffectSettings: TImageEffectSettings;
@@ -2091,6 +2088,7 @@ const
   );
 
   CGetPropertyHint_FindSubControlRenderingInBrowserSettings_Items: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UseTextRenderingInBrowser,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ActionForSendingRequest,
@@ -2293,11 +2291,10 @@ begin
     28: Result := AAction^.FindSubControlOptions.EvaluateTextCount;
     29: Result := BoolToStr(AAction^.FindSubControlOptions.CropFromScreenshot, True);
     30: Result := AAction^.FindSubControlOptions.ThreadCount;
-    31: Result := BoolToStr(AAction^.FindSubControlOptions.UseTextRenderingInBrowser, True);
-    32: Result := '';  //RenderingInBrowserSettings
-    33: Result := '';  //GPUSettings
-    34: Result := '';  //ImageEffectSettings
-    35: Result := CAttemptCountStr[AAction^.FindSubControlOptions.AttemptCount];
+    31: Result := '';  //RenderingInBrowserSettings
+    32: Result := '';  //GPUSettings
+    33: Result := '';  //ImageEffectSettings
+    34: Result := CAttemptCountStr[AAction^.FindSubControlOptions.AttemptCount];
     else
       Result := 'unknown';
   end;
@@ -2517,12 +2514,13 @@ end;
   function GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
-      0: Result := CRenderingRequestTypeStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType];
-      1: Result := IntToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout);
-      2: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest;
-      3: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps, True);
-      4: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps;
-      5: Result := CFontSizeUnitStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
+      0: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser, True);
+      1: Result := CRenderingRequestTypeStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType];
+      2: Result := IntToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout);
+      3: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest;
+      4: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps, True);
+      5: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps;
+      6: Result := CFontSizeUnitStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
       else
         Result := 'unknown';
     end;
@@ -3299,11 +3297,10 @@ begin
     28: AAction^.FindSubControlOptions.EvaluateTextCount := NewValue;
     29: AAction^.FindSubControlOptions.CropFromScreenshot := StrToBool(NewValue);
     30: AAction^.FindSubControlOptions.ThreadCount := NewValue;
-    31: AAction^.FindSubControlOptions.UseTextRenderingInBrowser := StrToBool(NewValue);
-    32: ;  //RenderingInBrowserSettings
-    33: ;  //GPUSettings
-    34: ;  //ImageEffectSettings
-    35: AAction^.FindSubControlOptions.AttemptCount := AttemptCount_AsStringToValue(NewValue);
+    31: ;  //RenderingInBrowserSettings
+    32: ;  //GPUSettings
+    33: ;  //ImageEffectSettings
+    34: AAction^.FindSubControlOptions.AttemptCount := AttemptCount_AsStringToValue(NewValue);
     else
       ;
   end;
@@ -3444,12 +3441,13 @@ end;
   procedure SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   begin
     case APropertyIndex of
-      0: AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := RenderingRequestType_AsStringToValue(NewValue);
-      1: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(NewValue, 3000);
-      2: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := NewValue;
-      3: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := StrToBool(NewValue);
-      4: AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewValue;
-      5: AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := FontSizeUnit_AsStringToValue(NewValue);
+      0: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := StrToBool(NewValue);
+      1: AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := RenderingRequestType_AsStringToValue(NewValue);
+      2: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(NewValue, 3000);
+      3: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := NewValue;
+      4: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := StrToBool(NewValue);
+      5: AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewValue;
+      6: AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := FontSizeUnit_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -4067,14 +4065,6 @@ begin
 end;
 
 
-function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
-begin
-  Result := 'When True, the text rendering is done in a web browser, instead of using the internal (GDI) rendering.' + #13#10 +
-            'This is useful to match antialiasing pixels even closer, when a browser-rendered text is to be searched for.' + #13#10 +
-            'Font size, quality and other properties work differently on browser, or are not available.';
-end;
-
-
 function GetPropertyHint_FindControl_AttemptCount: string;
 begin
   Result := 'When set to acOnce, the search stops after one failed attempt.' + #13#10 +
@@ -4188,6 +4178,13 @@ end;
 
 
 {$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UseTextRenderingInBrowser: string;
+  begin
+    Result := 'When True, the text rendering is done in a web browser, instead of using the internal (GDI) rendering.' + #13#10 +
+              'This is useful to match antialiasing pixels even closer, when a browser-rendered text is to be searched for.' + #13#10 +
+              'Font size, quality and other properties work differently on browser, or are not available.';
+  end;
+
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType: string;
   begin
     Result := 'If set to rrtShellExecute, UIClicker sends the request using Win32''s built-in ShellExecute function.' + #13#10 +

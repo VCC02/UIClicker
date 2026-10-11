@@ -347,7 +347,8 @@ class TMatchByHistogramSettings(Structure):
 
 
 class TRenderingInBrowserSettings(Structure):
-    _fields_ = [("RenderingRequestType", BYTE), #TRenderingRequestType
+    _fields_ = [("UseTextRenderingInBrowser", BOOLEAN),
+               ("RenderingRequestType", BYTE), #TRenderingRequestType
                ("ReceivingBitmapsTimeout", LONG),
                ("ActionForSendingRequest", LPCWSTR),
                ("UsePluginForReceivingBitmaps", BOOLEAN),
@@ -541,7 +542,6 @@ class TFindSubControlOptions(Structure):
                ("EvaluateTextCount", LPCWSTR),
                ("CropFromScreenshot", BOOLEAN),
                ("ThreadCount", LPCWSTR),
-               ("UseTextRenderingInBrowser", BOOLEAN),
                ("RenderingInBrowserSettings", TRenderingInBrowserSettings),
                ("GPUSettings", TGPUSettings),
                ("ImageEffectSettings", TImageEffectSettings),
@@ -610,9 +610,9 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.EvaluateTextCount = "-1"
     FindSubControlOptions.CropFromScreenshot = False
     FindSubControlOptions.ThreadCount = "2"
-    FindSubControlOptions.UseTextRenderingInBrowser = False
 
     FindSubControlOptions.RenderingInBrowserSettings = TRenderingInBrowserSettings()
+    FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser = False
     FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = TRenderingRequestType.rrtShellExecute
     FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout = 3000
     FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest = ''

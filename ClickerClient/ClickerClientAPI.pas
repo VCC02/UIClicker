@@ -139,6 +139,7 @@ type
 
 
   TRenderingInBrowserSettingsAPI = record
+    UseTextRenderingInBrowser: Boolean;
     RenderingRequestType: Byte; //TRenderingRequestType;
     ReceivingBitmapsTimeout: LongInt;
     ActionForSendingRequest: PWideChar;
@@ -309,7 +310,6 @@ type
     EvaluateTextCount: PWideChar;
     CropFromScreenshot: Boolean;
     ThreadCount: PWideChar;
-    UseTextRenderingInBrowser: Boolean;
     RenderingInBrowserSettings: TRenderingInBrowserSettingsAPI;
     GPUSettings: TGPUSettingsAPI;
     ImageEffectSettings: TImageEffectSettingsAPI;
@@ -737,8 +737,7 @@ begin
   ADestClkAction.FindSubControlOptions.CropFromScreenshot := AFindSubControlOptions^.CropFromScreenshot;
   SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.ThreadCount))[1], ADestClkAction.FindSubControlOptions.ThreadCount);
 
-  ADestClkAction.FindSubControlOptions.UseTextRenderingInBrowser := AFindSubControlOptions^.UseTextRenderingInBrowser;
-
+  ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := AFindSubControlOptions^.RenderingInBrowserSettings.UseTextRenderingInBrowser;
   ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(AFindSubControlOptions^.RenderingInBrowserSettings.RenderingRequestType);
   ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := AFindSubControlOptions^.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
   SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.RenderingInBrowserSettings.ActionForSendingRequest))[1], ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest);
@@ -1138,8 +1137,7 @@ begin
   ADestFindSubControlOptions.CropFromScreenshot := AFindSubControlOptions.CropFromScreenshot;
   ATempFindSubControlOptionsAPIWS.ThreadCount := WideString(AFindSubControlOptions.ThreadCount);  ADestFindSubControlOptions.ThreadCount := @ATempFindSubControlOptionsAPIWS.ThreadCount[1];// ADestFindSubControlOptions.ThreadCount := @WideString(AFindSubControlOptions.ThreadCount)[1];
 
-  ADestFindSubControlOptions.UseTextRenderingInBrowser := AFindSubControlOptions.UseTextRenderingInBrowser;
-
+  ADestFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser;
   ADestFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := Ord(AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType);
   ADestFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
   ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.ActionForSendingRequest := WideString(AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest);  ADestFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := @ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.ActionForSendingRequest[1];

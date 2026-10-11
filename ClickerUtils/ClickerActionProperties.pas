@@ -301,8 +301,8 @@ begin
             'EvaluateTextCount' + '=' + AFindSubControlOptions.EvaluateTextCount + '&' +
             'CropFromScreenshot' + '=' + IntToStr(Ord(AFindSubControlOptions.CropFromScreenshot)) + '&' +
             'ThreadCount' + '=' + AFindSubControlOptions.ThreadCount + '&' +
-            'UseTextRenderingInBrowser' + '=' + IntToStr(Ord(AFindSubControlOptions.UseTextRenderingInBrowser)) + '&' +
 
+            'RenderingInBrowserSettings.UseTextRenderingInBrowser' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser)) + '&' +
             'RenderingInBrowserSettings.RenderingRequestType' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType)) + '&' +
             'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + IntToStr(AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout) + '&' +
             'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '&' +
@@ -673,8 +673,8 @@ begin
             'EvaluateTextCount' + '=' + CDTString + '&' +
             'CropFromScreenshot' + '=' + CDTBool + '&' +
             'ThreadCount' + '=' + CDTString + '&' +
-            'UseTextRenderingInBrowser' + '=' + CDTBool + '&' +
 
+            'RenderingInBrowserSettings.UseTextRenderingInBrowser' + '=' + CDTBool + '&' +
             'RenderingInBrowserSettings.RenderingRequestType' + '=' + CDTEnum + '.TRenderingRequestType' + '&' +
             'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + CDTInteger + '&' +
             'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + CDTString + '&' +
@@ -1663,8 +1663,8 @@ begin
   AFindSubControlOptions.EvaluateTextCount := AListOfFindSubControlOptionsParams.Values['EvaluateTextCount'];
   AFindSubControlOptions.CropFromScreenshot := AListOfFindSubControlOptionsParams.Values['CropFromScreenshot'] = '1';
   AFindSubControlOptions.ThreadCount := AListOfFindSubControlOptionsParams.Values['ThreadCount'];
-  AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';  //assigned above
 
+  AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.UseTextRenderingInBrowser'] = '1';  //assigned above
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(Temp_RenderingRequestType);
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 3000);
   AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := AListOfFindSubControlOptionsParams.Values['PluginActionForReceivingBitmaps.ActionForSendingRequest'];
@@ -2173,7 +2173,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := '-1';
   AFindSubControlOptions.CropFromScreenshot := False;
   AFindSubControlOptions.ThreadCount := '2';
-  AFindSubControlOptions.UseTextRenderingInBrowser := False;
+  AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := False;
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtShellExecute;
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3000;
   AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := '';

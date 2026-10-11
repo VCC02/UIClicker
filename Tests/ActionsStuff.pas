@@ -1797,7 +1797,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := '-17';
   AFindSubControlOptions.CropFromScreenshot := True;
   AFindSubControlOptions.ThreadCount := '30';
-  AFindSubControlOptions.UseTextRenderingInBrowser := True;
+  AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := True;
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtAction;
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 8000;
   AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := 'NoAction';
@@ -1914,7 +1914,7 @@ begin
             'EvaluateTextCount' + '=' + '-17' + '&' +
             'CropFromScreenshot' + '=' + 'True' + '&' +
             'ThreadCount' + '=' + '30' + '&' +
-            'UseTextRenderingInBrowser' + '=' + 'True' + '&' +
+            'RenderingInBrowserSettings.UseTextRenderingInBrowser' + '=' + 'True' + '&' +
             'RenderingInBrowserSettings.RenderingRequestType' + '=' + 'rrtAction' + '&' +
             'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + '8000' + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + 'NoAction' + '&' +
