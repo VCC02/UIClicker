@@ -629,7 +629,7 @@ begin
   AFindSubControlOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'CropFromScreenshot', False);
   AFindSubControlOptions.ThreadCount := Ini.ReadString(SectionIndex, 'ThreadCount', '2');
 
-  AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := Ini.ReadBool(SectionIndex, 'RenderingInBrowserSettings.UseTextRenderingInBrowser', Ini.ReadBool(SectionIndex, 'UseTextRenderingInBrowser', False)); //The default is not a boolean, but an attempt to read from the old propery, which was outside of the RenderingInBrowserSettings structure
+  AFindSubControlOptions.RenderingInBrowserSettings.UseTextRenderingInBrowser := Ini.ReadBool(SectionIndex, 'RenderingInBrowserSettings.UseTextRenderingInBrowser', Ini.ReadBool(SectionIndex, 'UseTextRenderingInBrowser', False)); //The default is not a boolean, but an attempt to read from the old property, which was outside of the RenderingInBrowserSettings structure
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(Ord(Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.RenderingRequestType', 0)));
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.ReceivingBitmapsTimeout', 3000);
   AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := Ini.ReadString(SectionIndex, 'RenderingInBrowserSettings.ActionForSendingRequest', '');
