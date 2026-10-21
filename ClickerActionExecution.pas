@@ -76,6 +76,24 @@ type
     CritSec: TRTLCriticalSection;
   end;
 
+  TSearchingResult = record
+    ControlHandle: THandle;
+    ControlLeft: Integer;
+    //ControlTop: Integer;
+    ControlRight: Integer;
+    //ControlBottom: Integer;
+  end;
+  TSearchingResultArr = array of TSearchingResult;
+
+  TAllSearchingResultsStr = record
+    ControlHandles: string;
+    ControlLefts: string;
+    //ControlTops: string;
+    ControlRights: string;
+    //ControlBottoms: string;
+  end;
+  TAllSearchingResultsStrArr = array of TAllSearchingResultsStr;
+
 
   TActionExecution = class
   private
@@ -183,6 +201,17 @@ type
     procedure LoadBitmapToSearchOn(var AFindSubControlOptions: TClkFindSubControlOptions; AFindControlInputData: TFindControlInputData);
     function RunApp(AApp, AParams: string): Boolean;
     function PrepareTextRenderingInBrowser(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions): Boolean;
+    procedure DecodeSearchingResults(var AAllSearchingResultsStr: TAllSearchingResultsStrArr; var ASearchingResults: TSearchingResultArr);
+    function FindBitmapTextOnce(var AFindSubControlOptions: TClkFindSubControlOptions;
+                                var AActionOptions: TClkActionOptions;
+                                var AExitFindSubControl: Boolean;
+                                var FindControlInputData, WorkFindControlInputData: TFindControlInputData;
+                                var ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text: TCompRecArr;
+                                BmpTextProfileCount: Integer;
+                                InitialTickCount, Timeout: QWord;
+                                StopAllActionsOnDemandAddr: Pointer;
+                                MatchSource, DetailedMatchSource: string
+                                ): Boolean;
     function FindBitmapText(var AFindSubControlOptions: TClkFindSubControlOptions;
                             var AActionOptions: TClkActionOptions;
                             var AExitFindSubControl: Boolean;
@@ -2878,16 +2907,16 @@ begin
 end;
 
 
-function TActionExecution.FindBitmapText(var AFindSubControlOptions: TClkFindSubControlOptions;
-                                         var AActionOptions: TClkActionOptions;
-                                         var AExitFindSubControl: Boolean;
-                                         var FindControlInputData, WorkFindControlInputData: TFindControlInputData;
-                                         var ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text: TCompRecArr;
-                                         BmpTextProfileCount: Integer;
-                                         InitialTickCount, Timeout: QWord;
-                                         StopAllActionsOnDemandAddr: Pointer;
-                                         MatchSource, DetailedMatchSource: string
-                                         ): Boolean;
+function TActionExecution.FindBitmapTextOnce(var AFindSubControlOptions: TClkFindSubControlOptions;
+                                             var AActionOptions: TClkActionOptions;
+                                             var AExitFindSubControl: Boolean;
+                                             var FindControlInputData, WorkFindControlInputData: TFindControlInputData;
+                                             var ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text: TCompRecArr;
+                                             BmpTextProfileCount: Integer;
+                                             InitialTickCount, Timeout: QWord;
+                                             StopAllActionsOnDemandAddr: Pointer;
+                                             MatchSource, DetailedMatchSource: string
+                                             ): Boolean;
 var
   j: Integer;
   EvalFG, EvalBG: string;
@@ -3087,6 +3116,246 @@ begin
     end;
   end;
 end;  //FindBitmapText
+
+
+procedure TActionExecution.DecodeSearchingResults(var AAllSearchingResultsStr: TAllSearchingResultsStrArr; var ASearchingResults: TSearchingResultArr);
+var
+  i, k: Integer;
+  ResCnt: Integer;
+  TempRes_Control_Handles: TStringList;
+  TempRes_Control_Lefts: TStringList;
+  TempRes_Control_Rights: TStringList;
+begin
+  SetLength(ASearchingResults, 0);
+
+  TempRes_Control_Handles := TStringList.Create;
+  TempRes_Control_Lefts := TStringList.Create;
+  TempRes_Control_Rights := TStringList.Create;
+  try
+    TempRes_Control_Handles.LineBreak := #4#5;
+    TempRes_Control_Lefts.LineBreak := #4#5;
+    TempRes_Control_Rights.LineBreak := #4#5;
+
+    for i := 0 to Length(AAllSearchingResultsStr) - 1 do
+    begin
+      TempRes_Control_Handles.Text := AAllSearchingResultsStr[i].ControlHandles;
+      //if TempRes_Control_Handles.Count <> ResCnt then
+      //  raise Exception.Create('Results count mismatch on $AllControl_Handles$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlHandles);
+
+      ResCnt := TempRes_Control_Handles.Count;
+      TempRes_Control_Lefts.Text := AAllSearchingResultsStr[i].ControlLefts;
+      if TempRes_Control_Lefts.Count <> ResCnt then
+        raise Exception.Create('Results count mismatch on $AllControl_Lefts$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlLefts);
+
+      TempRes_Control_Rights.Text := AAllSearchingResultsStr[i].ControlRights;
+      if TempRes_Control_Rights.Count <> ResCnt then
+        raise Exception.Create('Results count mismatch on $AllControl_Rights$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlRights);
+
+      for k := 0 to ResCnt - 1 do
+      begin
+        SetLength(ASearchingResults, Length(ASearchingResults) + 1);
+        ASearchingResults[Length(ASearchingResults) - 1].ControlHandle := StrToInt64Def(TempRes_Control_Handles.Strings[k], 0);
+        ASearchingResults[Length(ASearchingResults) - 1].ControlLeft := StrToIntDef(TempRes_Control_Lefts.Strings[k], 0);
+        ASearchingResults[Length(ASearchingResults) - 1].ControlRight := StrToIntDef(TempRes_Control_Rights.Strings[k], 0);
+      end;
+    end;  //for i
+  finally
+    TempRes_Control_Handles.Free;
+    TempRes_Control_Lefts.Free;
+    TempRes_Control_Rights.Free;
+  end;
+end;
+
+
+function TActionExecution.FindBitmapText(var AFindSubControlOptions: TClkFindSubControlOptions;
+                                         var AActionOptions: TClkActionOptions;
+                                         var AExitFindSubControl: Boolean;
+                                         var FindControlInputData, WorkFindControlInputData: TFindControlInputData;
+                                         var ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text: TCompRecArr;
+                                         BmpTextProfileCount: Integer;
+                                         InitialTickCount, Timeout: QWord;
+                                         StopAllActionsOnDemandAddr: Pointer;
+                                         MatchSource, DetailedMatchSource: string
+                                         ): Boolean;
+var
+  InitialText: string;
+  InitialAllowedColorErrorCount: Integer;
+  InitialGetAllHandles: Boolean;
+
+  i, j: Integer;
+  TmpRes: Boolean;
+  ColorErrorCountPerCurrentText: Extended;
+  Parts: TStringList;
+  LatestSearchingResults: TSearchingResultArr;
+  AllSearchingResultsStr: TAllSearchingResultsStrArr;
+  AllControl_Count: string;
+begin
+  if not AFindSubControlOptions.MultiPartSearching.Enabled or
+    (FindControlInputData.Text = '') then
+    Result := FindBitmapTextOnce(AFindSubControlOptions,
+                                 AActionOptions,
+                                 AExitFindSubControl,
+                                 FindControlInputData, WorkFindControlInputData,
+                                 ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text,
+                                 BmpTextProfileCount,
+                                 InitialTickCount, Timeout,
+                                 StopAllActionsOnDemandAddr,
+                                 MatchSource, DetailedMatchSource
+                                 )                                                          //in work
+  else      //Multipart searching is useful when only a part of the text matches (directly). The remaining part(s) may also match separately.
+  begin     //currently limited to text orientation = 0       (AFindSubControlOptions.MatchBitmapText[].Orientation)
+    if AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType = mpstAlreadyKnownParts then
+    begin
+      Parts := TStringList.Create;
+      try
+        Parts.LineBreak := Copy(AFindSubControlOptions.MultiPartSearching.PartsSeparator, 1, 100); //a simple limit, in case of a bad string
+        Parts.Text := FindControlInputData.Text;
+        InitialText := FindControlInputData.Text;
+        InitialAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.AllowedColorErrorCount), 0);
+        InitialGetAllHandles := FindControlInputData.GetAllHandles;
+        try
+          SetLength(LatestSearchingResults, 0);
+          SetLength(AllSearchingResultsStr, 0);
+          AddToLog('___ FindSubControl with ' + IntToStr(Parts.Count) + ' part(s).');
+          for i := 0 to Parts.Count - 1 do
+          begin
+            //The following description is valid for text orientation = 0 only:
+            //On iterations with i > 0, the InitialRectangle.Left and InitialRectangle.Right should be $Control_Right$.
+            //InitialRectangle.LeftOffset should start at 0, InitialRectangle.RightOffset should be large enough to hold Parts.Strings[i].
+            //InitialRectangle.LeftOffset should also be modified in a loop, to go from NegativeRange to PositiveRange. (maybe in an "increased ringing" way)
+
+            FindControlInputData.Text := Parts.Strings[i];
+            FindControlInputData.GetAllHandles := True;  //a.k.a. GetAllControls. A part may be found in multiple locations.
+            AFindSubControlOptions.GetAllControls := True;
+            WorkFindControlInputData.Text := FindControlInputData.Text;
+            WorkFindControlInputData.GetAllHandles := FindControlInputData.GetAllHandles;
+
+            ColorErrorCountPerCurrentText := Length(FindControlInputData.Text) * InitialAllowedColorErrorCount / Length(InitialText); //This should be scaled to current text width [px], instead of string length.
+            AFindSubControlOptions.AllowedColorErrorCount := IntToStr(Round(ColorErrorCountPerCurrentText));
+            AddToLog('___ FindSubControl with AllowedColorErrorCount / TotalAllowedColorErrorCount = ' + IntToStr(Round(ColorErrorCountPerCurrentText)) + ' / ' + IntToStr(InitialAllowedColorErrorCount));
+
+            if i = 0 then
+              SetLength(LatestSearchingResults, 1) //to allow the below "for j" loop to run
+            else
+              DecodeSearchingResults(AllSearchingResultsStr, LatestSearchingResults);
+
+            AddToLog('___ FindSubControl Len(AllSearchingResultsStr) = ' + IntToStr(Length(AllSearchingResultsStr)) + '  Len(LatestSearchingResults) = ' + IntToStr(Length(LatestSearchingResults)));
+            SetLength(AllSearchingResultsStr, 0);
+            SetActionVarValue('$AllControl_Count$', '0'); //reset count here, for the next searching
+            for j := 0 to Length(LatestSearchingResults) - 1 do
+            begin
+              if i > 0 then
+              begin
+                FindControlInputData.GlobalSearchArea.Left := LatestSearchingResults[j].ControlRight;    //the current part is expected to be at right to the previous part
+                FindControlInputData.GlobalSearchArea.Right := LatestSearchingResults[j].ControlRight;
+
+                FindControlInputData.InitialRectangleOffsets.Left := AFindSubControlOptions.MultiPartSearching.NegativeRange;
+                FindControlInputData.InitialRectangleOffsets.Right := 200 + AFindSubControlOptions.MultiPartSearching.PositiveRange; //Bitmap.Canvas.TextWidth(FindControlInputData.Text) + AFindSubControlOptions.MultiPartSearching.PositiveRange - This info can be obtained from the previous iteration.
+
+                Inc(FindControlInputData.GlobalSearchArea.Left, FindControlInputData.InitialRectangleOffsets.Left);
+                Inc(FindControlInputData.GlobalSearchArea.Right, FindControlInputData.InitialRectangleOffsets.Right);
+              end;
+
+              TmpRes := FindBitmapTextOnce(AFindSubControlOptions,
+                                           AActionOptions,
+                                           AExitFindSubControl,
+                                           FindControlInputData, WorkFindControlInputData,
+                                           ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text,
+                                           BmpTextProfileCount,
+                                           InitialTickCount, Timeout,
+                                           StopAllActionsOnDemandAddr,
+                                           MatchSource, DetailedMatchSource
+                                           );
+
+              // Except when i = 0, the results are placed in:
+              // $AllControl_Count$, $AllControl_Handles$, $AllControl_Lefts$, $AllControl_Tops$, $AllControl_Rights$, $AllControl_Bottoms$
+              // When i = 0, the results are placed in the classic vars, or depending on GetAllControls property, they may also be found in AllControl_*.
+              // $Control_Handle$, $Control_Left$, $Control_Top$, $Control_Right$, $Control_Bottom$
+
+              if TmpRes then
+              begin  //add results only if found
+                SetLength(AllSearchingResultsStr, Length(AllSearchingResultsStr) + 1);
+
+                AllControl_Count := EvaluateReplacements('$AllControl_Count$');
+                if (AllControl_Count = '$AllControl_Count$') or ('$AllControl_Count$' = '') then
+                begin
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlHandles := EvaluateReplacements('$Control_Handle$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts := EvaluateReplacements('$Control_Left$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights := EvaluateReplacements('$Control_Right$');
+                end
+                else
+                begin
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlHandles := EvaluateReplacements('$AllControl_Handles$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts := EvaluateReplacements('$AllControl_Lefts$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights := EvaluateReplacements('$AllControl_Rights$');
+                end;
+              end;
+
+              AddToLog('___ FindSubControl partial result (i = ' + IntToStr(i) + ',  j = ' + IntToStr(j) + '  Part found: ' + BoolToStr(TmpRes, True) +  '  text part = ' + FindControlInputData.Text + '):');
+            end;  //for j
+
+            if Length(AllSearchingResultsStr) = 0 then
+            begin
+              Result := False;
+              Exit;
+            end;
+          end; //for i - parts
+
+          //ToDo: The debugging image will have to display the entire text (all parts) not just the last one.
+        finally
+          FindControlInputData.Text := InitialText;
+          WorkFindControlInputData.Text := InitialText;
+          AFindSubControlOptions.AllowedColorErrorCount := IntToStr(InitialAllowedColorErrorCount);
+          FindControlInputData.GetAllHandles := InitialGetAllHandles;
+          WorkFindControlInputData.GetAllHandles := InitialGetAllHandles;
+          AFindSubControlOptions.GetAllControls := InitialGetAllHandles;
+        end;
+      finally
+        Parts.Free;
+      end;
+    end  //mpstAlreadyKnownParts
+    else
+    begin  //ToDo
+      InitialText := FindControlInputData.Text;
+      InitialAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.AllowedColorErrorCount), 0);
+
+      Result := True;
+      try
+        for i := 1 to Length(InitialText) do
+        begin
+          FindControlInputData.Text := Copy(InitialText, 1, i);
+          WorkFindControlInputData.Text := FindControlInputData.Text;
+
+          ColorErrorCountPerCurrentText := i * InitialAllowedColorErrorCount / Length(InitialText); //This should be scaled to current text width [px], instead of string length.
+          AFindSubControlOptions.AllowedColorErrorCount := IntToStr(Round(ColorErrorCountPerCurrentText));
+
+          TmpRes := FindBitmapTextOnce(AFindSubControlOptions,
+                                       AActionOptions,
+                                       AExitFindSubControl,
+                                       FindControlInputData, WorkFindControlInputData,
+                                       ResultedControlArr, PartialResultedControlArr, ResultedControlArr_Text,
+                                       BmpTextProfileCount,
+                                       InitialTickCount, Timeout,
+                                       StopAllActionsOnDemandAddr,
+                                       MatchSource, DetailedMatchSource
+                                       );
+
+          AddToLog('___ FindSubControl partial result: ' + BoolToStr(TmpRes, True) + ', text: "' + FindControlInputData.Text + '"  ColorErrorCountPerCurrentText: ' + AFindSubControlOptions.AllowedColorErrorCount + ' / ' + IntToStr(InitialAllowedColorErrorCount));
+          if not TmpRes then
+          begin
+            //raise Exception.Create('Failed at partial text: ' + AFindSubControlOptions.MatchText);  //replace this line with matching by var positions of the remaining letters
+            Result := False;
+            Break;
+          end;
+        end; //for
+      finally
+        FindControlInputData.Text := InitialText;
+        WorkFindControlInputData.Text := InitialText;
+        AFindSubControlOptions.AllowedColorErrorCount := IntToStr(InitialAllowedColorErrorCount);
+      end;
+    end; //mpstUnknownParts
+  end;
+end;
 
 
 function TActionExecution.FindBitmapFiles(var AFindSubControlOptions: TClkFindSubControlOptions;

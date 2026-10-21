@@ -177,6 +177,19 @@ type
   end;
 
 
+  TMultiPartSearchingAPI = record
+    Enabled: Boolean;
+    MultiPartSearchingType: Byte; //TMultiPartSearchingType;
+    PartsSeparator: PWideChar;
+    NegativeRange: Integer;
+    PositiveRange: Integer;
+  end;
+
+  TMultiPartSearchingAPIWS = record
+    PartsSeparator: WideString;
+  end;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -314,6 +327,7 @@ type
     GPUSettings: TGPUSettingsAPI;
     ImageEffectSettings: TImageEffectSettingsAPI;
     AttemptCount: Byte; //TAttemptCount
+    MultiPartSearching: TMultiPartSearchingAPI;
   end;
 
   PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
@@ -336,6 +350,7 @@ type
     ThreadCount: WideString;
     RenderingInBrowserSettings: TRenderingInBrowserSettingsAPIWS;
     GPUSettings: TGPUSettingsAPIWS;
+    MultiPartSearching: TMultiPartSearchingAPIWS;
   end;
 
 
@@ -758,6 +773,12 @@ begin
 
   ADestClkAction.FindSubControlOptions.AttemptCount := TAttemptCount(AFindSubControlOptions^.AttemptCount);
 
+  ADestClkAction.FindSubControlOptions.MultiPartSearching.Enabled := AFindSubControlOptions^.MultiPartSearching.Enabled;
+  ADestClkAction.FindSubControlOptions.MultiPartSearching.MultiPartSearchingType := TMultiPartSearchingType(AFindSubControlOptions^.MultiPartSearching.MultiPartSearchingType);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MultiPartSearching.PartsSeparator))[1], ADestClkAction.FindSubControlOptions.MultiPartSearching.PartsSeparator);
+  ADestClkAction.FindSubControlOptions.MultiPartSearching.NegativeRange := AFindSubControlOptions^.MultiPartSearching.NegativeRange;
+  ADestClkAction.FindSubControlOptions.MultiPartSearching.PositiveRange := AFindSubControlOptions^.MultiPartSearching.PositiveRange;
+
   if AFindSubControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
     Exit;
   //However, if the field is not nil, then it is either valid or an uninitialized pointer.
@@ -1157,6 +1178,12 @@ begin
   ADestFindSubControlOptions.ImageEffectSettings.WhereToApply := Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply);
 
   ADestFindSubControlOptions.AttemptCount := Ord(AFindSubControlOptions.AttemptCount);
+
+  ADestFindSubControlOptions.MultiPartSearching.Enabled := AFindSubControlOptions.MultiPartSearching.Enabled;
+  ADestFindSubControlOptions.MultiPartSearching.MultiPartSearchingType := Ord(AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType);
+  ATempFindSubControlOptionsAPIWS.MultiPartSearching.PartsSeparator := WideString(AFindSubControlOptions.MultiPartSearching.PartsSeparator);  ADestFindSubControlOptions.MultiPartSearching.PartsSeparator := @ATempFindSubControlOptionsAPIWS.MultiPartSearching.PartsSeparator[1];
+  ADestFindSubControlOptions.MultiPartSearching.NegativeRange := Ord(AFindSubControlOptions.MultiPartSearching.NegativeRange);
+  ADestFindSubControlOptions.MultiPartSearching.PositiveRange := Ord(AFindSubControlOptions.MultiPartSearching.PositiveRange);
 
   if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin
