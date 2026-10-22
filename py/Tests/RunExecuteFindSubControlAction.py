@@ -126,6 +126,11 @@ try:
 
     FindControlOptions.AttemptCount = TAttemptCount.acOnce
 
+    FindControlOptions.MultiPartSearching.Enabled = True
+    FindControlOptions.MultiPartSearching.MultiPartSearchingType = TMultiPartSearchingType.mpstUnknownParts
+    FindControlOptions.MultiPartSearching.PartsSeparator = 'unused'
+    FindControlOptions.MultiPartSearching.NegativeRange = -3
+    FindControlOptions.MultiPartSearching.PositiveRange = 6
 
     TempMatchBitmapTextRec = TMatchBitmapTextRec(2)
     TempMatchBitmapTextRec.Items[0].ForegroundColor = '888888'
