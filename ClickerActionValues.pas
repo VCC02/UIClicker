@@ -2355,6 +2355,7 @@ begin
     32: Result := '';  //GPUSettings
     33: Result := '';  //ImageEffectSettings
     34: Result := CAttemptCountStr[AAction^.FindSubControlOptions.AttemptCount];
+    35: Result := '';  //MultiPartSearching
     else
       Result := 'unknown';
   end;

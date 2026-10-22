@@ -325,9 +325,9 @@ begin
 
             'MultiPartSearching.Enabled' + '=' + IntToStr(Ord(AFindSubControlOptions.MultiPartSearching.Enabled)) + '&' +
             'MultiPartSearching.MultiPartSearchingType' + '=' + IntToStr(Ord(AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType)) + '&' +
-            'MultiPartSearching.UseImageEffects' + '=' + AFindSubControlOptions.MultiPartSearching.PartsSeparator + '&' +
-            'MultiPartSearching.ImageEffect' + '=' + IntToStr(AFindSubControlOptions.MultiPartSearching.NegativeRange) + '&' +
-            'MultiPartSearching.WhereToApply' + '=' + IntToStr(AFindSubControlOptions.MultiPartSearching.PositiveRange) // + '&' +
+            'MultiPartSearching.PartsSeparator' + '=' + AFindSubControlOptions.MultiPartSearching.PartsSeparator + '&' +
+            'MultiPartSearching.NegativeRange' + '=' + IntToStr(AFindSubControlOptions.MultiPartSearching.NegativeRange) + '&' +
+            'MultiPartSearching.PositiveRange' + '=' + IntToStr(AFindSubControlOptions.MultiPartSearching.PositiveRange) // + '&' +
             ;
 end;
 
@@ -981,6 +981,18 @@ begin
         end;
 
         if APropertyDataTypeName = 'TWhereToApply' then
+        begin
+          Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TAttemptCount' then
+        begin
+          Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TMultiPartSearchingType' then
         begin
           Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
           Exit;

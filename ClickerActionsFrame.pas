@@ -6884,7 +6884,7 @@ begin
                 ImageList := dmClickerIcons.imglstImageEffectSettingsProperties;
 
               CFindSubControl_MultiPartSearching_PropIndex:
-                ImageList := dmClickerIcons.imglstImageEffectSettingsProperties;    //ToDo
+                ImageList := dmClickerIcons.imglstMultiPartSearchingProperties;
             end;
           end;
 
@@ -8304,12 +8304,21 @@ begin
       Exit;
     end;
 
-    if (APropertyIndex in [CFindSubControl_MultiPartSearching_PropIndex]) and
-       not AEditingAction^.FindSubControlOptions.MultiPartSearching.Enabled then
-      if APropertyItemIndex in [CFindSubControl_MultiPartSearching_MultiPartSearchingType_PropItemIndex .. CFindSubControl_MultiPartSearching_PositiveRange_PropItemIndex] then
+    if (APropertyIndex in [CFindSubControl_MultiPartSearching_PropIndex]) then
     begin
-      TargetCanvas.Font.Color := clGray;
-      Exit;
+      if not AEditingAction^.FindSubControlOptions.MultiPartSearching.Enabled then
+        if APropertyItemIndex in [CFindSubControl_MultiPartSearching_MultiPartSearchingType_PropItemIndex .. CFindSubControl_MultiPartSearching_PositiveRange_PropItemIndex] then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      if AEditingAction^.FindSubControlOptions.MultiPartSearching.MultiPartSearchingType = mpstUnknownParts then
+        if APropertyItemIndex = CFindSubControl_MultiPartSearching_PartsSeparator_PropItemIndex then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
     end;
   end; //acFindSubControl
 
