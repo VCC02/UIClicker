@@ -62,7 +62,7 @@ const
   CPropCount_Click = 27;
   CPropCount_ExecApp = 9;
   CPropCount_FindControl = 16;
-  CPropCount_FindSubControl = 35;
+  CPropCount_FindSubControl = 36;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -107,6 +107,7 @@ const
   CPropCount_FindSubControlRenderingInBrowserSettings = 7;
   CPropCount_FindSubControlGPUSettings = 6;
   CPropCount_FindSubControlImageEffectSettings = 3;
+  CPropCount_FindSubControlMultiPartSearching = 5;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -190,6 +191,7 @@ const
   CFindSubControl_GPUSettings_PropIndex = 32;
   CFindSubControl_ImageEffectSettings_PropIndex = 33;
   CFindSubControl_AttemptCount_PropIndex = 34;
+  CFindSubControl_MultiPartSearching_PropIndex = 35;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -271,6 +273,12 @@ const
   CFindSubControl_ImageEffectSettings_UseImageEffects_PropItemIndex = 0;
   CFindSubControl_ImageEffectSettings_ImageEffect_PropItemIndex = 1;
   CFindSubControl_ImageEffectSettings_WhereToApply_PropItemIndex = 2;
+
+  CFindSubControl_MultiPartSearching_Enabled_PropItemIndex = 0;
+  CFindSubControl_MultiPartSearching_MultiPartSearchingType_PropItemIndex = 1;
+  CFindSubControl_MultiPartSearching_PartsSeparator_PropItemIndex = 2;
+  CFindSubControl_MultiPartSearching_NegativeRange_PropItemIndex = 3;
+  CFindSubControl_MultiPartSearching_PositiveRange_PropItemIndex = 4;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -443,7 +451,8 @@ const
     (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'GPUSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'ImageEffectSettings'; EditorType: etNone; DataType: CDTStructure),
-    (Name: 'AttemptCount'; EditorType: etEnumCombo; DataType: CDTEnum)
+    (Name: 'AttemptCount'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'MultiPartSearching'; EditorType: etNone; DataType: CDTStructure)
   );
 
   {$IFDEF SubProperties}
@@ -549,6 +558,14 @@ const
       (Name: 'UseImageEffects'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'ImageEffect'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'WhereToApply'; EditorType: etEnumCombo; DataType: CDTEnum)
+    );
+
+    CFindSubControl_MultiPartSearchingProperties: array[0..CPropCount_FindSubControlMultiPartSearching - 1] of TOIPropDef = (
+      (Name: 'Enabled'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'MultiPartSearchingType'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'PartsSeparator'; EditorType: etText; DataType: CDTString),
+      (Name: 'NegativeRange'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'PositiveRange'; EditorType: etSpinText; DataType: CDTInteger)
     );
   {$ENDIF}
 
@@ -731,6 +748,7 @@ function GetActionValueStr_SaveSetVarToIniFile(AAction: PClkActionRec; AProperty
   function GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_ImageEffectSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindSubControl_MultiPartSearching(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
   function GetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; APropertyIndex: Integer): string;
 {$ENDIF}
@@ -766,6 +784,7 @@ procedure SetActionValueStr_SaveSetVarToIniFile(AAction: PClkActionRec; NewValue
   procedure SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_ImageEffectSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindSubControl_MultiPartSearching(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
   procedure SetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
@@ -871,7 +890,8 @@ const
     GetActionValueStr_FindSubControl_RenderingInBrowserSettings,  //RenderingInBrowserSettings
     GetActionValueStr_FindSubControl_GPUSettings,  //GPUSettings
     GetActionValueStr_FindSubControl_ImageEffectSettings,  //ImageEffectSettings
-    nil  //AttemptCount
+    nil, //AttemptCount
+    GetActionValueStr_FindSubControl_MultiPartSearching
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -987,7 +1007,8 @@ const
     0, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     0, //GPUSettings: TGPUSettings;
     0, //ImageEffectSettings: TImageEffectSettings;
-    Ord(High(TAttemptCount)) + 1
+    Ord(High(TAttemptCount)) + 1,
+    0
   );
 
 
@@ -1157,6 +1178,14 @@ const
       Ord(High(TWhereToApply)) + 1  //WhereToApply: TWhereToApply;
     );
 
+    CFindSubControl_MultiPartSearchingEnumCounts: array[0..CPropCount_FindSubControlMultiPartSearching - 1] of Integer = (
+      0, //Enabled: Boolean;
+      Ord(High(TMultiPartSearchingType)) + 1, //MultiPartSearchingType: TMultiPartSearchingType;
+      0,  //PartsSeparator: string;
+      0,  //NegativeRange: Integer;
+      0   //PositiveRange: Integer;
+    );
+
     CCallTemplate_CallTemplateLoopEnumCounts: array[0..CPropCount_CallTemplateLoop - 1] of Integer = (
       0, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       0, //Counter: string;
@@ -1273,7 +1302,8 @@ const
     nil, //RenderingInBrowserSettings
     nil, //GPUSettings
     nil, //ImageEffectSettings
-    @CAttemptCountStr
+    @CAttemptCountStr,
+    nil
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1441,6 +1471,14 @@ const
       @CWhereToApplyStr  //WhereToApply: TWhereToApply;
     );
 
+    CFindControl_MultiPartSearchingEnumStrings: array[0..CPropCount_FindSubControlMultiPartSearching - 1] of PArrayOfString = (
+      nil, //Enabled: Boolean; //
+      @CMultiPartSearchingTypeStr, //MultiPartSearchingType: TMultiPartSearchingType; //
+      nil,  //PartsSeparator: string;
+      nil,  //NegativeRange: Integer;
+      nil   //PositiveRange: Integer;
+    );
+
     CCallTemplate_CallTemplateLoopEnumStrings: array[0..CPropCount_CallTemplateLoop - 1] of PArrayOfString = (
       nil, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       nil, //Counter: string;
@@ -1563,7 +1601,8 @@ const
     1, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     1, //GPUSettings: TGPUSettings;
     1, //ImageEffectSettings: TImageEffectSettings;
-    0  //AttemptCount
+    0, //AttemptCount
+    1  //MultiPartSearching
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1726,6 +1765,7 @@ function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
 function GetPropertyHint_FindControl_GPUSettings: string;
 function GetPropertyHint_FindControl_ImageEffectSettings: string;
 function GetPropertyHint_FindControl_AttemptCount: string;
+function GetPropertyHint_FindControl_MultiPartSearching: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
@@ -1770,6 +1810,15 @@ function GetPropertyHint_FindControl_AttemptCount: string;
   function GetPropertyHint_FindSubControl_ImageEffectSettings_UseImageEffects: string;
   function GetPropertyHint_FindSubControl_ImageEffectSettings_ImageEffect: string;
   function GetPropertyHint_FindSubControl_ImageEffectSettings_WhereToApply: string;
+{$ENDIF}
+
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_MultiPartSearching_Enabled: string;
+  function GetPropertyHint_FindSubControl_MultiPartSearching_MultiPartSearchingType: string;
+  function GetPropertyHint_FindSubControl_MultiPartSearching_PartsSeparator: string;
+  function GetPropertyHint_FindSubControl_MultiPartSearching_NegativeRange: string;
+  function GetPropertyHint_FindSubControl_MultiPartSearching_PositiveRange: string;
 {$ENDIF}
 
 
@@ -1943,7 +1992,8 @@ const
     @GetPropertyHint_FindControl_RenderingInBrowserSettings, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     @GetPropertyHint_FindControl_GPUSettings,  //GPUSettings: TGPUSettings;
     @GetPropertyHint_FindControl_ImageEffectSettings,  //ImageEffectSettings: TImageEffectSettings;
-    @GetPropertyHint_FindControl_AttemptCount //AttemptCount: TAttemptCount;
+    @GetPropertyHint_FindControl_AttemptCount, //AttemptCount: TAttemptCount;
+    @GetPropertyHint_FindControl_MultiPartSearching
   );
 
 
@@ -2111,6 +2161,16 @@ const
     @GetPropertyHint_FindSubControl_ImageEffectSettings_ImageEffect,
     @GetPropertyHint_FindSubControl_ImageEffectSettings_WhereToApply
   );
+
+
+  CGetPropertyHint_FindSubControlMultiPartSearching_Items: array[0..CPropCount_FindSubControlMultiPartSearching - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindSubControl_MultiPartSearching_Enabled,
+    @GetPropertyHint_FindSubControl_MultiPartSearching_MultiPartSearchingType,
+    @GetPropertyHint_FindSubControl_MultiPartSearching_PartsSeparator,
+    @GetPropertyHint_FindSubControl_MultiPartSearching_NegativeRange,
+    @GetPropertyHint_FindSubControl_MultiPartSearching_PositiveRange
+  );
+
 
   CGetPropertyHint_CallTemplateLoop_Items: array[0..CPropCount_CallTemplateLoop - 1] of TPropHintFunc = (
     @GetPropertyHintNoHint, //Enabled: Boolean;
@@ -2295,6 +2355,7 @@ begin
     32: Result := '';  //GPUSettings
     33: Result := '';  //ImageEffectSettings
     34: Result := CAttemptCountStr[AAction^.FindSubControlOptions.AttemptCount];
+    35: Result := '';  //MultiPartSearching
     else
       Result := 'unknown';
   end;
@@ -2552,6 +2613,22 @@ end;
         Result := 'unknown';
     end;
   end;
+
+
+  function GetActionValueStr_FindSubControl_MultiPartSearching(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := BoolToStr(AAction^.FindSubControlOptions.MultiPartSearching.Enabled, True);
+      1: Result := CMultiPartSearchingTypeStr[AAction^.FindSubControlOptions.MultiPartSearching.MultiPartSearchingType];
+      2: Result := AAction^.FindSubControlOptions.MultiPartSearching.PartsSeparator;
+      3: Result := IntToStr(AAction^.FindSubControlOptions.MultiPartSearching.NegativeRange);
+      4: Result := IntToStr(AAction^.FindSubControlOptions.MultiPartSearching.PositiveRange);
+      5: Result := 'Reserved';
+      else
+        Result := 'unknown';
+    end;
+  end;
+
 {$ENDIF}
 
 
@@ -3029,6 +3106,20 @@ begin
 end;
 
 
+function MultiPartSearchingType_AsStringToValue(AMultiPartSearchingTypeAsString: string): TMultiPartSearchingType;
+var
+  i: TMultiPartSearchingType;
+begin
+  Result := mpstAlreadyKnownParts;
+  for i := Low(TMultiPartSearchingType) to High(TMultiPartSearchingType) do
+    if CMultiPartSearchingTypeStr[i] = AMultiPartSearchingTypeAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function ClkSetTextControlType_AsStringToValue(AClkSetTextControlTypeAsString: string): TClkSetTextControlType;
 var
   i: TClkSetTextControlType;
@@ -3301,6 +3392,7 @@ begin
     32: ;  //GPUSettings
     33: ;  //ImageEffectSettings
     34: AAction^.FindSubControlOptions.AttemptCount := AttemptCount_AsStringToValue(NewValue);
+    35: ;  //MultiPartSearching
     else
       ;
   end;
@@ -3479,6 +3571,22 @@ end;
         ;
     end;
   end;
+
+
+  procedure SetActionValueStr_FindSubControl_MultiPartSearching(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: AAction^.FindSubControlOptions.MultiPartSearching.Enabled := StrToBool(NewValue);
+      1: AAction^.FindSubControlOptions.MultiPartSearching.MultiPartSearchingType := MultiPartSearchingType_AsStringToValue(NewValue);
+      2: AAction^.FindSubControlOptions.MultiPartSearching.PartsSeparator := NewValue;
+      3: AAction^.FindSubControlOptions.MultiPartSearching.NegativeRange := StrToIntDef(NewValue, -1);
+      4: AAction^.FindSubControlOptions.MultiPartSearching.PositiveRange := StrToIntDef(NewValue, 1);
+      5: ; //IncrementalSearchingSettings
+      else
+        ;
+    end;
+  end;
+
 {$ENDIF}
 
 
@@ -3934,7 +4042,7 @@ function GetPropertyHint_FindControl_UseFastSearch: string;
 begin
   Result := 'When set to True, FindSubControl starts searching the bitmap (text, file, primitive etc) by cropping a 5px x 5px area, from its top-left corner.' + #13#10 +
             'If that matches, the algorihm verifies a match at the same position, for the full searched bitmap.' + #13#10 +
-            'When set to True, the full bitmap is verified at every valid position. Usually, this is very slow (it gets slower with larger bitmaps).';
+            'When set to False, the full bitmap is verified at every valid position. Usually, this is very slow (it gets slower with larger bitmaps).';
 end;
 
 
@@ -4069,6 +4177,12 @@ function GetPropertyHint_FindControl_AttemptCount: string;
 begin
   Result := 'When set to acOnce, the search stops after one failed attempt.' + #13#10 +
             'When set to acMultiple, the search stops when found, or on timeout.';
+end;
+
+
+function GetPropertyHint_FindControl_MultiPartSearching: string;
+begin
+  Result := 'Used for text which has unintended spacing (pixel overlapping or blanks).';
 end;
 
 
@@ -4315,6 +4429,42 @@ end;
   end;
 {$ENDIF}
 
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_MultiPartSearching_Enabled: string;
+  begin
+    Result := 'If enabled, the FindSubControl action searches for individual parts of the MatchText string,' + #13#10 +
+              'expecting that the entire string cannot be found, because of unintended overlapping pixels or blanks, as a result of rendering.';
+  end;
+
+  function GetPropertyHint_FindSubControl_MultiPartSearching_MultiPartSearchingType: string;
+  begin
+    Result := 'When set to mpstAlreadyKnownParts, the MatchText property is expected to contain a comma separated text, or something similar.' + #13#10 +
+              'In this case, the user is expected to know where the string is split into parts.' + #13#10 +
+              'The action behaves like multiple FindSubControl calls, for every mentioned part, expecting to find every part to the right of the previous one.' + #13#10 +
+              'When set to mpstUnknownParts, the MatchText property splits the MatchText property into letters and attepts to find each letter individually.' + #13#10 +
+              'In this case, the PartsSeparator property is ignored.' + #13#10 +
+              'This mode of operation is currently not implemented.';
+  end;
+
+  function GetPropertyHint_FindSubControl_MultiPartSearching_PartsSeparator: string;
+  begin
+    Result := 'Used as the parts separator string. By defaults, this is a comma.';
+  end;
+
+  function GetPropertyHint_FindSubControl_MultiPartSearching_NegativeRange: string;
+  begin
+    Result := 'The number of expected overlapping pixels between parts.' + #13#10 +
+              'Valid values: -300..0';
+  end;
+
+  function GetPropertyHint_FindSubControl_MultiPartSearching_PositiveRange: string;
+  begin
+    Result := 'The number of expected blank pixels between parts.' + #13#10 +
+              'Valid values: 0..300';
+  end;
+
+{$ENDIF}
 
 
 function GetPropertyHint_SetText: string;
