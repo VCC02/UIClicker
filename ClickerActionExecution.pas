@@ -79,18 +79,18 @@ type
   TSearchingResult = record
     ControlHandle: THandle;
     ControlLeft: Integer;
-    //ControlTop: Integer;
+    ControlTop: Integer;
     ControlRight: Integer;
-    //ControlBottom: Integer;
+    ControlBottom: Integer;
   end;
   TSearchingResultArr = array of TSearchingResult;
 
   TAllSearchingResultsStr = record
     ControlHandles: string;
     ControlLefts: string;
-    //ControlTops: string;
+    ControlTops: string;
     ControlRights: string;
-    //ControlBottoms: string;
+    ControlBottoms: string;
   end;
   TAllSearchingResultsStrArr = array of TAllSearchingResultsStr;
 
@@ -3124,17 +3124,23 @@ var
   ResCnt: Integer;
   TempRes_Control_Handles: TStringList;
   TempRes_Control_Lefts: TStringList;
+  TempRes_Control_Tops: TStringList;
   TempRes_Control_Rights: TStringList;
+  TempRes_Control_Bottoms: TStringList;
 begin
   SetLength(ASearchingResults, 0);
 
   TempRes_Control_Handles := TStringList.Create;
   TempRes_Control_Lefts := TStringList.Create;
+  TempRes_Control_Tops := TStringList.Create;
   TempRes_Control_Rights := TStringList.Create;
+  TempRes_Control_Bottoms := TStringList.Create;
   try
     TempRes_Control_Handles.LineBreak := #4#5;
     TempRes_Control_Lefts.LineBreak := #4#5;
+    TempRes_Control_Tops.LineBreak := #4#5;
     TempRes_Control_Rights.LineBreak := #4#5;
+    TempRes_Control_Bottoms.LineBreak := #4#5;
 
     for i := 0 to Length(AAllSearchingResultsStr) - 1 do
     begin
@@ -3143,26 +3149,39 @@ begin
       //  raise Exception.Create('Results count mismatch on $AllControl_Handles$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlHandles);
 
       ResCnt := TempRes_Control_Handles.Count;
+
       TempRes_Control_Lefts.Text := AAllSearchingResultsStr[i].ControlLefts;
       if TempRes_Control_Lefts.Count <> ResCnt then
         raise Exception.Create('Results count mismatch on $AllControl_Lefts$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlLefts);
 
+      TempRes_Control_Tops.Text := AAllSearchingResultsStr[i].ControlTops;
+      if TempRes_Control_Tops.Count <> ResCnt then
+        raise Exception.Create('Results count mismatch on $AllControl_Tops$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlTops);
+
       TempRes_Control_Rights.Text := AAllSearchingResultsStr[i].ControlRights;
       if TempRes_Control_Rights.Count <> ResCnt then
         raise Exception.Create('Results count mismatch on $AllControl_Rights$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlRights);
+
+      TempRes_Control_Bottoms.Text := AAllSearchingResultsStr[i].ControlBottoms;
+      if TempRes_Control_Bottoms.Count <> ResCnt then
+        raise Exception.Create('Results count mismatch on $AllControl_Bottoms$. Expected ' + IntToStr(ResCnt) + ' item(s), but found ' + AAllSearchingResultsStr[i].ControlBottoms);
 
       for k := 0 to ResCnt - 1 do
       begin
         SetLength(ASearchingResults, Length(ASearchingResults) + 1);
         ASearchingResults[Length(ASearchingResults) - 1].ControlHandle := StrToInt64Def(TempRes_Control_Handles.Strings[k], 0);
         ASearchingResults[Length(ASearchingResults) - 1].ControlLeft := StrToIntDef(TempRes_Control_Lefts.Strings[k], 0);
+        ASearchingResults[Length(ASearchingResults) - 1].ControlTop := StrToIntDef(TempRes_Control_Tops.Strings[k], 0);
         ASearchingResults[Length(ASearchingResults) - 1].ControlRight := StrToIntDef(TempRes_Control_Rights.Strings[k], 0);
+        ASearchingResults[Length(ASearchingResults) - 1].ControlBottom := StrToIntDef(TempRes_Control_Bottoms.Strings[k], 0);
       end;
     end;  //for i
   finally
     TempRes_Control_Handles.Free;
     TempRes_Control_Lefts.Free;
+    TempRes_Control_Tops.Free;
     TempRes_Control_Rights.Free;
+    TempRes_Control_Bottoms.Free;
   end;
 end;
 
@@ -3248,13 +3267,19 @@ begin
               begin
                 AddToLog('___ FindSubControl - Setting area to ' + IntToStr(LatestSearchingResults[j].ControlRight) + ' at i = ' + IntToStr(i) + '  and j = ' + IntToStr(j));
                 FindControlInputData.GlobalSearchArea.Left := LatestSearchingResults[j].ControlRight;    //the current part is expected to be at right to the previous part
+                FindControlInputData.GlobalSearchArea.Top := LatestSearchingResults[j].ControlTop;
                 FindControlInputData.GlobalSearchArea.Right := LatestSearchingResults[j].ControlRight;
+                FindControlInputData.GlobalSearchArea.Bottom := LatestSearchingResults[j].ControlBottom;
 
                 FindControlInputData.InitialRectangleOffsets.Left := AFindSubControlOptions.MultiPartSearching.NegativeRange;
+                FindControlInputData.InitialRectangleOffsets.Top := -1;  //-1, to allow a 1px offset towards top.
                 FindControlInputData.InitialRectangleOffsets.Right := 200 + AFindSubControlOptions.MultiPartSearching.PositiveRange; //Bitmap.Canvas.TextWidth(FindControlInputData.Text) + AFindSubControlOptions.MultiPartSearching.PositiveRange - This info can be obtained from the previous iteration.
+                FindControlInputData.InitialRectangleOffsets.Bottom := 0;  //When setting to 0, this includes a 1px offset towards bottom.
 
                 Inc(FindControlInputData.GlobalSearchArea.Left, FindControlInputData.InitialRectangleOffsets.Left);
+                Inc(FindControlInputData.GlobalSearchArea.Top, FindControlInputData.InitialRectangleOffsets.Top);
                 Inc(FindControlInputData.GlobalSearchArea.Right, FindControlInputData.InitialRectangleOffsets.Right);
+                Inc(FindControlInputData.GlobalSearchArea.Bottom, FindControlInputData.InitialRectangleOffsets.Bottom);
               end;
 
               TmpRes := FindBitmapTextOnce(AFindSubControlOptions,
@@ -3282,13 +3307,17 @@ begin
                 begin
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlHandles := EvaluateReplacements('$Control_Handle$');
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts := EvaluateReplacements('$Control_Left$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlTops := EvaluateReplacements('$Control_Top$');
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights := EvaluateReplacements('$Control_Right$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlBottoms := EvaluateReplacements('$Control_Bottom$');
                 end
                 else
                 begin
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlHandles := EvaluateReplacements('$AllControl_Handles$');
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts := EvaluateReplacements('$AllControl_Lefts$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlTops := EvaluateReplacements('$AllControl_Tops$');
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights := EvaluateReplacements('$AllControl_Rights$');
+                  AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlBottoms := EvaluateReplacements('$AllControl_Bottoms$')
                 end;
 
                 AddToLog('___ FindSubControl partial result  ControlLefts = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts + '  ControlRights = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights);
