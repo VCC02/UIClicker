@@ -2923,6 +2923,7 @@ var
   ExtBmpName: string;
   FindControlOnScreen_Result: Boolean;
   ResultedControl: TCompRec;
+  AdditionalSearchAreaSize: Integer;
 begin
   Result := False;
   ResultedControl.XOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
@@ -3008,6 +3009,14 @@ begin
         //  FindControlInputData.BitmapToSearchFor.Canvas.Pen.Color := clRed;
         //  FindControlInputData.BitmapToSearchFor.Canvas.Line(20, 30, 60, 70);
         //end;
+
+        if AFindSubControlOptions.MultiPartSearching.Enabled then
+          if FindControlInputData.IncreaseSearchAreaOffsetByTextWidth then   //this happens for every font profile
+          begin
+            AdditionalSearchAreaSize := FindControlInputData.BitmapToSearchFor.Canvas.TextExtent(FindControlInputData.Text).cx;
+            Inc(FindControlInputData.InitialRectangleOffsets.Right, AdditionalSearchAreaSize);
+            Inc(FindControlInputData.GlobalSearchArea.Right, AdditionalSearchAreaSize);
+          end;
 
         //negative area verification - moved above "for j" loop
         if AFindSubControlOptions.MatchBitmapAlgorithm <> mbaRenderTextOnly then
@@ -3258,6 +3267,8 @@ begin
             else
               DecodeSearchingResults(AllSearchingResultsStr, LatestSearchingResults);
 
+            FindControlInputData.IncreaseSearchAreaOffsetByTextWidth := i > 0;
+
             AddToLog('___ FindSubControl Len(AllSearchingResultsStr) = ' + IntToStr(Length(AllSearchingResultsStr)) + '  Len(LatestSearchingResults) = ' + IntToStr(Length(LatestSearchingResults)));
             SetLength(AllSearchingResultsStr, 0);
             SetActionVarValue('$AllControl_Count$', '0'); //reset count here, for the next searching
@@ -3273,7 +3284,7 @@ begin
 
                 FindControlInputData.InitialRectangleOffsets.Left := AFindSubControlOptions.MultiPartSearching.NegativeRange;
                 FindControlInputData.InitialRectangleOffsets.Top := -1;  //-1, to allow a 1px offset towards top.
-                FindControlInputData.InitialRectangleOffsets.Right := 200 + AFindSubControlOptions.MultiPartSearching.PositiveRange; //Bitmap.Canvas.TextWidth(FindControlInputData.Text) + AFindSubControlOptions.MultiPartSearching.PositiveRange - This info can be obtained from the previous iteration.
+                FindControlInputData.InitialRectangleOffsets.Right := AFindSubControlOptions.MultiPartSearching.PositiveRange; //The area is extended further by text width (later in FindBitmapTextOnce, based on FindControlInputData.IncreaseSearchAreaOffsetByTextWidth).
                 FindControlInputData.InitialRectangleOffsets.Bottom := 0;  //When setting to 0, this includes a 1px offset towards bottom.
 
                 Inc(FindControlInputData.GlobalSearchArea.Left, FindControlInputData.InitialRectangleOffsets.Left);
