@@ -3246,6 +3246,7 @@ begin
             begin
               if i > 0 then
               begin
+                AddToLog('___ FindSubControl - Setting area to ' + IntToStr(LatestSearchingResults[j].ControlRight) + ' at i = ' + IntToStr(i) + '  and j = ' + IntToStr(j));
                 FindControlInputData.GlobalSearchArea.Left := LatestSearchingResults[j].ControlRight;    //the current part is expected to be at right to the previous part
                 FindControlInputData.GlobalSearchArea.Right := LatestSearchingResults[j].ControlRight;
 
@@ -3277,7 +3278,7 @@ begin
                 SetLength(AllSearchingResultsStr, Length(AllSearchingResultsStr) + 1);
 
                 AllControl_Count := EvaluateReplacements('$AllControl_Count$');
-                if (AllControl_Count = '$AllControl_Count$') or ('$AllControl_Count$' = '') then
+                if (AllControl_Count = '$AllControl_Count$') or (AllControl_Count = '') or (AllControl_Count = '0') then
                 begin
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlHandles := EvaluateReplacements('$Control_Handle$');
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts := EvaluateReplacements('$Control_Left$');
@@ -3289,6 +3290,8 @@ begin
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts := EvaluateReplacements('$AllControl_Lefts$');
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights := EvaluateReplacements('$AllControl_Rights$');
                 end;
+
+                AddToLog('___ FindSubControl partial result  ControlLefts = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts + '  ControlRights = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights);
               end;
 
               AddToLog('___ FindSubControl partial result (i = ' + IntToStr(i) + ',  j = ' + IntToStr(j) + '  Part found: ' + BoolToStr(TmpRes, True) +  '  text part = ' + FindControlInputData.Text + '):');
