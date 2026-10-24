@@ -3356,6 +3356,13 @@ begin
       finally
         Parts.Free;
       end;
+
+      if Length(ResultedControlArr_Text) > 1 then
+      begin
+        ResultedControlArr_Text[0].ComponentRectangle.Right := ResultedControlArr_Text[Length(ResultedControlArr_Text) - 1].ComponentRectangle.Right;
+        ResultedControlArr_Text[0].ComponentRectangle.Bottom := ResultedControlArr_Text[Length(ResultedControlArr_Text) - 1].ComponentRectangle.Bottom;
+        //ToDo: verify and also set for multi results
+      end;
     end  //mpstAlreadyKnownParts
     else
     begin  //ToDo
