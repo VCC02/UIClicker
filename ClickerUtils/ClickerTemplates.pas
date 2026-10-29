@@ -269,6 +269,12 @@ begin
     ACustomActions[i].FindSubControlOptions.ImageEffectSettings.ImageEffect := ieBlur4x;
     ACustomActions[i].FindSubControlOptions.ImageEffectSettings.WhereToApply := wtaAll;
 
+    ACustomActions[i].FindSubControlOptions.MultiPartSearching.Enabled := False;
+    ACustomActions[i].FindSubControlOptions.MultiPartSearching.MultiPartSearchingType := mpstAlreadyKnownParts;
+    ACustomActions[i].FindSubControlOptions.MultiPartSearching.PartsSeparator := ',';
+    ACustomActions[i].FindSubControlOptions.MultiPartSearching.NegativeRange := -1;
+    ACustomActions[i].FindSubControlOptions.MultiPartSearching.PositiveRange := 1;
+
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchPrimitiveFiles_' + IterationStr, False);
@@ -649,6 +655,12 @@ begin
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Ord(Ini.ReadInteger(SectionIndex, 'ImageEffectSettings.WhereToApply', 0)));
 
   AFindSubControlOptions.AttemptCount := TAttemptCount(Min(Ini.ReadInteger(SectionIndex, 'AttemptCount', Integer(acMultiple)), Integer(High(TAttemptCount))));
+
+  AFindSubControlOptions.MultiPartSearching.Enabled := Ini.ReadBool(SectionIndex, 'MultiPartSearching.Enabled', False);
+  AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType := TMultiPartSearchingType(Min(Ini.ReadInteger(SectionIndex, 'MultiPartSearching.MultiPartSearchingType', Integer(mpstAlreadyKnownParts)), Integer(High(TMultiPartSearchingType))));
+  AFindSubControlOptions.MultiPartSearching.PartsSeparator := Ini.ReadString(SectionIndex, 'MultiPartSearching.PartsSeparator', ',');
+  AFindSubControlOptions.MultiPartSearching.NegativeRange := Ini.ReadInteger(SectionIndex, 'MultiPartSearching.NegativeRange', -1);
+  AFindSubControlOptions.MultiPartSearching.PositiveRange := Ini.ReadInteger(SectionIndex, 'MultiPartSearching.PositiveRange', 1);
 end;
 
 
@@ -1214,6 +1226,12 @@ begin
   AStringList.Add('ImageEffectSettings.WhereToApply=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.WhereToApply)));
 
   AStringList.Add('AttemptCount=' + IntToStr(Ord(AActionFindSubControlOptions.AttemptCount)));
+
+  AStringList.Add('MultiPartSearching.Enabled=' + IntToStr(Ord(AActionFindSubControlOptions.MultiPartSearching.Enabled)));
+  AStringList.Add('MultiPartSearching.MultiPartSearchingType=' + IntToStr(Ord(AActionFindSubControlOptions.MultiPartSearching.MultiPartSearchingType)));
+  AStringList.Add('MultiPartSearching.PartsSeparator=' + AActionFindSubControlOptions.MultiPartSearching.PartsSeparator);
+  AStringList.Add('MultiPartSearching.NegativeRange=' + IntToStr(AActionFindSubControlOptions.MultiPartSearching.NegativeRange));
+  AStringList.Add('MultiPartSearching.PositiveRange=' + IntToStr(AActionFindSubControlOptions.MultiPartSearching.PositiveRange));
 end;
 
 
@@ -1468,6 +1486,7 @@ begin
   ADest.GPUSettings := ASrc.GPUSettings;
   ADest.ImageEffectSettings := ASrc.ImageEffectSettings;
   ADest.AttemptCount := ASrc.AttemptCount;
+  ADest.MultiPartSearching := ASrc.MultiPartSearching;
 end;
 
 

@@ -1814,6 +1814,11 @@ begin
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := ieGrayscale;
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := wtaSearchedBitmapsOnly;
   AFindSubControlOptions.AttemptCount := acOnce;
+  AFindSubControlOptions.MultiPartSearching.Enabled := True;
+  AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType := mpstUnknownParts;
+  AFindSubControlOptions.MultiPartSearching.PartsSeparator := 'unused';
+  AFindSubControlOptions.MultiPartSearching.NegativeRange := -3;
+  AFindSubControlOptions.MultiPartSearching.PositiveRange := 6;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
@@ -1933,7 +1938,13 @@ begin
             'ImageEffectSettings.ImageEffect' + '=' + 'ieGrayscale' + '&' +
             'ImageEffectSettings.WhereToApply' + '=' + 'wtaSearchedBitmapsOnly' + '&' +
 
-            'AttemptCount' + '=' + 'acOnce'
+            'AttemptCount' + '=' + 'acOnce' + '&' +
+
+            'MultiPartSearching.Enabled' + '=' + 'True' + '&' +
+            'MultiPartSearching.MultiPartSearchingType' + '=' + 'mpstUnknownParts' + '&' +
+            'MultiPartSearching.PartsSeparator' + '=' + 'unused' + '&' +
+            'MultiPartSearching.NegativeRange' + '=' + '-3' + '&' +
+            'MultiPartSearching.PositiveRange' + '=' + '6'
             ;
 end;
 
