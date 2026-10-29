@@ -3244,9 +3244,15 @@ begin
         try
           SetLength(LatestSearchingResults, 0);
           SetLength(AllSearchingResultsStr, 0);
-          AddToLog('___ FindSubControl with ' + IntToStr(Parts.Count) + ' part(s).');
+          AddToLog('___ FindSubControl with ' + IntToStr(Parts.Count) + ' part(s).  FindControlInputData.Text is ' + FindControlInputData.Text);
+
+          //ToDo: Verify if: should backup ResultedControlArr_Text here, then reset it at every "for i" iteration (maybe accumulate patial results). After the "for i" loop, restore it (or "restore" accumultated results).
+          //ToDo: $DebugVar_SubCnvXOffset$ and $DebugVar_SubCnvXOffset$ will have to be updated to the Top-Left of the first word
+
           for i := 0 to Parts.Count - 1 do
           begin
+            SetLength(ResultedControlArr_Text, 0);  //possibly required when GetAllControls is True
+
             //The following description is valid for text orientation = 0 only:
             //On iterations with i > 0, the InitialRectangle.Left and InitialRectangle.Right should be $Control_Right$.
             //InitialRectangle.LeftOffset should start at 0, InitialRectangle.RightOffset should be large enough to hold Parts.Strings[i].
