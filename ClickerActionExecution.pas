@@ -787,6 +787,11 @@ begin
       ASearchedBmp.Canvas.Rectangle(0, 0, ASearchedBmp.Width, ASearchedBmp.Height); //this rectangle is required, for proper content copying
       BitBlt(ASearchedBmp.Canvas.Handle, 0, 0, ASearchedBmp.Width, ASearchedBmp.Height, APreviewBmp.Canvas.Handle, 0, 0, SRCCOPY);
     end;
+
+    ASearchedBmp.Canvas.Font.Color := APreviewBmp.Canvas.Font.Color;  //probably doesn't matter
+    ASearchedBmp.Canvas.Font.Name := APreviewBmp.Canvas.Font.Name;
+    ASearchedBmp.Canvas.Font.Size := APreviewBmp.Canvas.Font.Size;
+    ASearchedBmp.Canvas.Font.Style := APreviewBmp.Canvas.Font.Style;
   finally
     APreviewBmp.Free;
   end;
@@ -3016,6 +3021,7 @@ begin
             AdditionalSearchAreaSize := FindControlInputData.BitmapToSearchFor.Canvas.TextExtent(FindControlInputData.Text).cx;
             Inc(FindControlInputData.InitialRectangleOffsets.Right, AdditionalSearchAreaSize);
             Inc(FindControlInputData.GlobalSearchArea.Right, AdditionalSearchAreaSize);
+            AddToLog('____FindSubControl - Increased search area with ' + IntToStr(AdditionalSearchAreaSize) + 'px for the part: ' + FindControlInputData.Text + '.  Font: ' + FindControlInputData.BitmapToSearchFor.Canvas.Font.Name + ', ' + IntToStr(FindControlInputData.BitmapToSearchFor.Canvas.Font.Size));
           end;
 
         //negative area verification - moved above "for j" loop

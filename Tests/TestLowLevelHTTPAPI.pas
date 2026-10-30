@@ -72,6 +72,7 @@ type
     procedure PrepareGradientTextForMultiPartText;
     procedure ExecuteFindSubControlAction_MultiPartText_TwoParts(const AXOffsets, AYOffsets: TIntArr; AExpectFailedAction: Boolean = False);
     procedure ExecuteFindSubControlAction_MultiPartText_ThreeParts(const AXOffsets, AYOffsets: TIntArr; AExpectFailedAction: Boolean = False);
+    procedure ExecuteFindSubControlAction_MultiPartText_TwoLongParts(const AXOffsets, AYOffsets: TIntArr; AExpectFailedAction: Boolean = False);
     procedure ExecuteFindSubControlAction_MultiPartText_TwoParts_GetAllControls(const AXOffsets, AYOffsets: TIntArr; AExpectFailedAction: Boolean = False);
   public
     constructor Create; override;
@@ -143,6 +144,8 @@ type
     procedure Test_ExecuteFindSubControlAction_MultiPartText_WithOverlap_TwoParts_ExtraPositiveVerticalOffset;
     procedure Test_ExecuteFindSubControlAction_MultiPartText_WithBlank_ThreeParts_NoVerticalOffset;
     procedure Test_ExecuteFindSubControlAction_MultiPartText_WithOverlap_ThreeParts_NoVerticalOffset;
+    procedure Test_ExecuteFindSubControlAction_MultiPartText_WithBlank_TwoLongParts_NoVerticalOffset;
+    procedure Test_ExecuteFindSubControlAction_MultiPartText_WithOverlap_TwoLongParts_NoVerticalOffset;
 
     procedure Test_FindSubControl_ExternalBackground_isflDisk;
     procedure Test_FindSubControl_ExternalBackground_isflMem;
@@ -1296,7 +1299,7 @@ begin
   FindSubControl.InitialRectangle.Bottom := '$Control_Top$';
   FindSubControl.InitialRectangle.LeftOffset := '0';
   FindSubControl.InitialRectangle.TopOffset := '0';
-  FindSubControl.InitialRectangle.RightOffset := '150';
+  FindSubControl.InitialRectangle.RightOffset := '460';
   FindSubControl.InitialRectangle.BottomOffset := '100';
   FindSubControl.ColorError := '3';
   FindSubControl.AllowedColorErrorCount := '15';
@@ -1306,7 +1309,7 @@ begin
   FindSubControl.MultiPartSearching.MultiPartSearchingType := mpstAlreadyKnownParts;
   FindSubControl.MultiPartSearching.PartsSeparator := ',';
   FindSubControl.MultiPartSearching.NegativeRange := -4;
-  FindSubControl.MultiPartSearching.PositiveRange := 30; //this should be a lower value, like 3 or 4
+  FindSubControl.MultiPartSearching.PositiveRange := 4;
 
   if not AExpectFailedAction then
     ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find multi part text on GradientText', 3000, CREParam_FileLocation_ValueMem)))
@@ -1414,6 +1417,24 @@ begin
 end;
 
 
+procedure TTestLowLevelHTTPAPI.ExecuteFindSubControlAction_MultiPartText_TwoLongParts(const AXOffsets, AYOffsets: TIntArr; AExpectFailedAction: Boolean = False);
+begin
+  SetupTargetWindowFor_FindSubControl;
+
+  RunGradientText;
+  try
+    PrepareGradientTextForMultiPartText;
+    RenderMultiPartTextOnGradientTextWindow(['AVeryLongText', 'FollowedByAnotherLongTextWithDot.'], AXOffsets, AYOffsets);
+    //RenderMultiPartTextOnGradientTextWindow(['AVeryLongTextFollowedByAnotherLongTextWithDot.', 'ref'], [10, 310], [50, 50]);   //dgb
+
+    FindGradientTextWindow;
+    FindTextPartsOnGradientTextImage(['AVeryLongText', 'FollowedByAnotherLongTextWithDot.'], AExpectFailedAction);
+  finally
+    CloseGradientText;
+  end;
+end;
+
+
 procedure TTestLowLevelHTTPAPI.ExecuteFindSubControlAction_MultiPartText_TwoParts_GetAllControls(const AXOffsets, AYOffsets: TIntArr; AExpectFailedAction: Boolean = False);
 var
   NewXOffsets, NewYOffsets: TIntArr;
@@ -1506,13 +1527,25 @@ end;
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_MultiPartText_WithBlank_ThreeParts_NoVerticalOffset;
 begin
-  ExecuteFindSubControlAction_MultiPartText_ThreeParts([10, 54, 108], [30, 30, 30]);
+  ExecuteFindSubControlAction_MultiPartText_ThreeParts([10, 54, 107], [30, 30, 30]);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_MultiPartText_WithOverlap_ThreeParts_NoVerticalOffset;
 begin
   ExecuteFindSubControlAction_MultiPartText_ThreeParts([10, 48, 92], [30, 30, 30]);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_MultiPartText_WithBlank_TwoLongParts_NoVerticalOffset;
+begin
+  ExecuteFindSubControlAction_MultiPartText_TwoLongParts([60, 168], [30, 30]);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_MultiPartText_WithOverlap_TwoLongParts_NoVerticalOffset;
+begin
+  ExecuteFindSubControlAction_MultiPartText_TwoLongParts([60, 160], [30, 30]);
 end;
 
 
