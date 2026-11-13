@@ -77,6 +77,7 @@ type
     MatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
     CropFromScreenshot: Boolean;
     ThreadCount: Integer;
+    IncreaseSearchAreaOffsetByTextWidth: Boolean;
 
     OpenCLPath: string;
     GPUPlatformIndex: Integer;

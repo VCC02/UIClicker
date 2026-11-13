@@ -321,7 +321,13 @@ begin
             'ImageEffectSettings.ImageEffect' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.ImageEffect)) + '&' +
             'ImageEffectSettings.WhereToApply' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply)) + '&' +
 
-            'AttemptCount' + '=' + IntToStr(Ord(AFindSubControlOptions.AttemptCount)) // + '&' +
+            'AttemptCount' + '=' + IntToStr(Ord(AFindSubControlOptions.AttemptCount))  + '&' +
+
+            'MultiPartSearching.Enabled' + '=' + IntToStr(Ord(AFindSubControlOptions.MultiPartSearching.Enabled)) + '&' +
+            'MultiPartSearching.MultiPartSearchingType' + '=' + IntToStr(Ord(AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType)) + '&' +
+            'MultiPartSearching.PartsSeparator' + '=' + AFindSubControlOptions.MultiPartSearching.PartsSeparator + '&' +
+            'MultiPartSearching.NegativeRange' + '=' + IntToStr(AFindSubControlOptions.MultiPartSearching.NegativeRange) + '&' +
+            'MultiPartSearching.PositiveRange' + '=' + IntToStr(AFindSubControlOptions.MultiPartSearching.PositiveRange) // + '&' +
             ;
 end;
 
@@ -693,7 +699,13 @@ begin
             'ImageEffectSettings.ImageEffect' + '=' + CDTEnum + '.TImageEffect' + '&' +
             'ImageEffectSettings.WhereToApply' + '=' + CDTEnum + '.TWhereToApply' + '&' +
 
-            'AttemptCount' + '=' + CDTEnum + '.TAttemptCount' //+ '&' +
+            'AttemptCount' + '=' + CDTEnum + '.TAttemptCount' + '&' +
+
+            'MultiPartSearching.Enabled' + '=' + CDTBool + '&' +
+            'MultiPartSearching.MultiPartSearchingType' + '=' + CDTEnum + '.TMultiPartSearchingType' + '&' +
+            'MultiPartSearching.PartsSeparator' + '=' + CDTString + '&' +
+            'MultiPartSearching.NegativeRange' + '=' + CDTInteger + '&' +
+            'MultiPartSearching.PositiveRange' + '=' + CDTInteger //+ '&' +
             ;
 end;
 
@@ -969,6 +981,18 @@ begin
         end;
 
         if APropertyDataTypeName = 'TWhereToApply' then
+        begin
+          Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TAttemptCount' then
+        begin
+          Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TMultiPartSearchingType' then
         begin
           Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
           Exit;
@@ -1474,6 +1498,9 @@ var
   Temp_ImageEffect: Integer;
   Temp_WhereToApply: Integer;
   Temp_AttemptCount: Integer;
+  Temp_MultiPartSearchingType: Integer;
+  Temp_NegativeRange: Integer;
+  Temp_PositiveRange: Integer;
 begin
   Result := '';
 
@@ -1594,6 +1621,27 @@ begin
     Exit;
   end;
 
+  Temp_MultiPartSearchingType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MultiPartSearching.MultiPartSearchingType'], 0);
+  if (Temp_MultiPartSearchingType < 0) or (Temp_MultiPartSearchingType > Ord(High(TMultiPartSearchingType))) then
+  begin
+    Result := 'MultiPartSearchingType is out of range.';
+    Exit;
+  end;
+
+  Temp_NegativeRange := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MultiPartSearching.NegativeRange'], 0);
+  if (Temp_NegativeRange < -300) or (Temp_NegativeRange > 0) then
+  begin
+    Result := 'NegativeRange is out of range.';
+    Exit;
+  end;
+
+  Temp_PositiveRange := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MultiPartSearching.PositiveRange'], 0);
+  if (Temp_PositiveRange < 0) or (Temp_PositiveRange > 300) then
+  begin
+    Result := 'PositiveRange is out of range.';
+    Exit;
+  end;
+
   AFindSubControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindSubControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
   AFindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
 
@@ -1684,6 +1732,12 @@ begin
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Temp_WhereToApply);
 
   AFindSubControlOptions.AttemptCount := TAttemptCount(Temp_AttemptCount);
+
+  AFindSubControlOptions.MultiPartSearching.Enabled := AListOfFindSubControlOptionsParams.Values['MultiPartSearching.Enabled'] = '1';
+  AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType := TMultiPartSearchingType(Temp_MultiPartSearchingType);
+  AFindSubControlOptions.MultiPartSearching.PartsSeparator := AListOfFindSubControlOptionsParams.Values['MultiPartSearching.PartsSeparator'];
+  AFindSubControlOptions.MultiPartSearching.NegativeRange := Temp_NegativeRange;
+  AFindSubControlOptions.MultiPartSearching.PositiveRange := Temp_PositiveRange;
 
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -2190,6 +2244,11 @@ begin
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := ieBlur4x;
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := wtaAll;
   AFindSubControlOptions.AttemptCount := acMultiple;
+  AFindSubControlOptions.MultiPartSearching.Enabled := False;
+  AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType := mpstAlreadyKnownParts;
+  AFindSubControlOptions.MultiPartSearching.PartsSeparator := ',';
+  AFindSubControlOptions.MultiPartSearching.NegativeRange := -1;
+  AFindSubControlOptions.MultiPartSearching.PositiveRange := 1;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
 

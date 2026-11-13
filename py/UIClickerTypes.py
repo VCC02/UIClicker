@@ -158,6 +158,10 @@ class TAttemptCount: #(Enum):
     acOnce = 0
     acMultiple = 1
 
+class TMultiPartSearchingType: #(Enum):
+    mpstAlreadyKnownParts = 0
+    mpstUnknownParts = 1
+
 
 class TClkSetTextControlType: #(Enum):
     stEditBox = 0
@@ -368,7 +372,14 @@ class TImageEffectSettings(Structure):
                ("ImageEffect", BYTE), #TImageEffect
                ("WhereToApply", BYTE)] #TWhereToApply
 
+class TMultiPartSearching(Structure):
+    _fields_ = [("Enabled", BOOLEAN),
+               ("MultiPartSearchingType", BYTE), #TMultiPartSearchingType
+               ("PartsSeparator", LPCWSTR),
+               ("NegativeRange", LONG),
+               ("PositiveRange", LONG)]
 
+               
 ###########/////////////////
 
 #Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
@@ -545,7 +556,8 @@ class TFindSubControlOptions(Structure):
                ("RenderingInBrowserSettings", TRenderingInBrowserSettings),
                ("GPUSettings", TGPUSettings),
                ("ImageEffectSettings", TImageEffectSettings),
-               ("AttemptCount", BYTE) #TAttemptCount)
+               ("AttemptCount", BYTE), #TAttemptCount)
+               ("MultiPartSearching", TMultiPartSearching)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -603,6 +615,7 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.PrecisionTimeout = False
     FindSubControlOptions.FullBackgroundImageInResult = True
 
+    FindSubControlOptions.MatchByHistogramSettings = TMatchByHistogramSettings()
     FindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch = '50'
     FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '10'
     FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
@@ -627,12 +640,21 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.GPUSettings.TargetPlatform = TTargetPlatformIDType.tpitIndex
     FindSubControlOptions.GPUSettings.TargetDeviceIDType = TTargetDeviceIDType.tditIndex
     FindSubControlOptions.GPUSettings.ExecutionAvailability = TGPUExecutionAvailability.eaOpenCL3Only
-    
+
+    FindSubControlOptions.ImageEffectSettings = TImageEffectSettings()
     FindSubControlOptions.ImageEffectSettings.UseImageEffects = False
     FindSubControlOptions.ImageEffectSettings.ImageEffect = TImageEffect.ieBlur4x
     FindSubControlOptions.ImageEffectSettings.WhereToApply = TWhereToApply.wtaAll
-    
+
     FindSubControlOptions.AttemptCount = TAttemptCount.acMultiple
+
+    FindSubControlOptions.MultiPartSearching = TMultiPartSearching()
+    FindSubControlOptions.MultiPartSearching.Enabled = False
+    FindSubControlOptions.MultiPartSearching.MultiPartSearchingType = TMultiPartSearchingType.mpstAlreadyKnownParts
+    FindSubControlOptions.MultiPartSearching.PartsSeparator = ','
+    FindSubControlOptions.MultiPartSearching.NegativeRange = -1
+    FindSubControlOptions.MultiPartSearching.PositiveRange = 1
+
     return FindSubControlOptions
 
 

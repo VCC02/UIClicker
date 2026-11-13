@@ -340,6 +340,16 @@ type
   end;
 
   TAttemptCount = (acOnce, acMultiple);
+  TMultiPartSearchingType = (mpstAlreadyKnownParts, mpstUnknownParts);  //mpstAlreadyKnownParts expects multiple strings to be separated
+
+  TMultiPartSearching = record
+    Enabled: Boolean;
+    MultiPartSearchingType: TMultiPartSearchingType;
+    PartsSeparator: string; //for example a comma, as in CSV
+    NegativeRange: Integer; //number of px from the end of a part (its right edge) to the next (its left edge), when the parts are overlapped
+    PositiveRange: Integer; //number of px from the end of a part (its right edge) to the next (its left edge), when there is a space between parts
+    //IncrementalSearchingSettings: used by mpstUnknownParts  ToDo
+  end;
 
   TClkFindControlOptions = record
     MatchCriteria: TClkFindControlMatchCriteria;
@@ -397,6 +407,7 @@ type
     GPUSettings: TGPUSettings;
     ImageEffectSettings: TImageEffectSettings;
     AttemptCount: TAttemptCount; //When set to acOnce, the search stops after one attempt, else it stops when found or on timeout.
+    MultiPartSearching: TMultiPartSearching;
   end;
 
   TClkSetTextOptions = record
@@ -699,6 +710,7 @@ const
   CExecutionAvailabilityStr: array[TGPUExecutionAvailability] of string = ('eaOpenCL3Only', 'eaOpenCL1Only', 'eaOpenCL3Then1', 'eaOpenCL3Then1ThenCPU');
   CImageEffectStr: array[TImageEffect] of string = ('ieBlur4x', 'ieBlur8x', 'ieBlur_Reserved', 'ieGrayscale');
   CWhereToApplyStr: array[TWhereToApply] of string = ('wtaAll', 'wtaSearchedBitmapsOnly');
+  CMultiPartSearchingTypeStr: array[TMultiPartSearchingType] of string = ('mpstAlreadyKnownParts', 'mpstUnknownParts');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');

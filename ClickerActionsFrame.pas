@@ -6305,6 +6305,9 @@ begin
         CFindSubControl_ImageEffectSettings_PropIndex:
           Result := CPropCount_FindSubControlImageEffectSettings;
 
+        CFindSubControl_MultiPartSearching_PropIndex:
+          Result := CPropCount_FindSubControlMultiPartSearching;
+
         else
           Result := 0;
       end;
@@ -6435,6 +6438,9 @@ begin
 
         CFindSubControl_ImageEffectSettings_PropIndex:
           Result := CFindSubControl_ImageEffectSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_MultiPartSearching_PropIndex:
+          Result := CFindSubControl_MultiPartSearchingProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -6581,6 +6587,9 @@ begin
         CFindSubControl_ImageEffectSettings_PropIndex:
           APropDef := CFindSubControl_ImageEffectSettingsProperties[AItemIndex];
 
+        CFindSubControl_MultiPartSearching_PropIndex:
+          APropDef := CFindSubControl_MultiPartSearchingProperties[AItemIndex];
+
         else
           ;
       end;
@@ -6712,6 +6721,9 @@ begin
 
             CFindSubControl_ImageEffectSettings_PropIndex:
               Result := CFindSubControl_ImageEffectSettingsProperties[AItemIndex].DataType;
+
+            CFindSubControl_MultiPartSearching_PropIndex:
+              Result := CFindSubControl_MultiPartSearchingProperties[AItemIndex].DataType;
           end;
         end;
 
@@ -6870,6 +6882,9 @@ begin
 
               CFindSubControl_ImageEffectSettings_PropIndex:
                 ImageList := dmClickerIcons.imglstImageEffectSettingsProperties;
+
+              CFindSubControl_MultiPartSearching_PropIndex:
+                ImageList := dmClickerIcons.imglstMultiPartSearchingProperties;
             end;
           end;
 
@@ -7472,7 +7487,14 @@ begin
           OldText := GetActionValueStr_FindSubControl_ImageEffectSettings(AEditingAction, AItemIndex);
           SetActionValueStr_FindSubControl_ImageEffectSettings(AEditingAction, ANewText, AItemIndex);
           TriggerOnControlsModified(ANewText <> OldText);
-        end
+        end;
+
+        CFindSubControl_MultiPartSearching_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindSubControl_MultiPartSearching(AEditingAction, AItemIndex);
+          SetActionValueStr_FindSubControl_MultiPartSearching(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+        end;
 
         else
           ;
@@ -7904,6 +7926,12 @@ begin
       Result := CFindSubControl_ImageEffectSettingsEnumCounts[AItemIndex];
       Exit;
     end;
+
+    if APropertyIndex = CFindSubControl_MultiPartSearching_PropIndex then
+    begin
+      Result := CFindSubControl_MultiPartSearchingEnumCounts[AItemIndex];
+      Exit;
+    end;
   end;
 
   if ALiveEditingActionType = acCallTemplate then
@@ -8010,6 +8038,12 @@ begin
     if APropertyIndex = CFindSubControl_ImageEffectSettings_PropIndex then
     begin
       AEnumItemName := CFindControl_ImageEffectSettingsEnumStrings[AItemIndex]^[AEnumItemIndex];
+      Exit;
+    end;
+
+    if APropertyIndex = CFindSubControl_MultiPartSearching_PropIndex then
+    begin
+      AEnumItemName := CFindControl_MultiPartSearchingEnumStrings[AItemIndex]^[AEnumItemIndex];
       Exit;
     end;
   end;
@@ -8268,6 +8302,23 @@ begin
     begin
       TargetCanvas.Font.Color := clGray;
       Exit;
+    end;
+
+    if (APropertyIndex in [CFindSubControl_MultiPartSearching_PropIndex]) then
+    begin
+      if not AEditingAction^.FindSubControlOptions.MultiPartSearching.Enabled then
+        if APropertyItemIndex in [CFindSubControl_MultiPartSearching_MultiPartSearchingType_PropItemIndex .. CFindSubControl_MultiPartSearching_PositiveRange_PropItemIndex] then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      if AEditingAction^.FindSubControlOptions.MultiPartSearching.MultiPartSearchingType = mpstUnknownParts then
+        if APropertyItemIndex = CFindSubControl_MultiPartSearching_PartsSeparator_PropItemIndex then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
     end;
   end; //acFindSubControl
 
@@ -9242,6 +9293,11 @@ begin
           begin
             AHint := CGetPropertyHint_FindSubControlImageEffectSettings_Items[AItemIndex];
           end;
+
+          CFindSubControl_MultiPartSearching_PropIndex:
+          begin
+            AHint := CGetPropertyHint_FindSubControlMultiPartSearching_Items[AItemIndex];
+          end;
         end; //case
       end; //FindSubControl
 
@@ -9942,6 +9998,9 @@ begin
 
         CFindSubControl_ImageEffectSettings_PropIndex:
           ;
+
+        CFindSubControl_MultiPartSearching_PropIndex:
+          ;
       end; //case APropertyIndex
     end; //FindControl, FindSubControl
 
@@ -10534,6 +10593,9 @@ begin
 
       CFindSubControl_ImageEffectSettings_PropIndex:
         ;
+
+      CFindSubControl_MultiPartSearching_PropIndex:
+        ;
     end; //case
   end;
 end;
@@ -10805,6 +10867,9 @@ begin
 
         CFindSubControl_ImageEffectSettings_PropIndex:
           Result := CFindSubControl_ImageEffectSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_MultiPartSearching_PropIndex:
+          Result := CFindSubControl_MultiPartSearchingProperties[AItemIndex].Name;
         else
           Result := '';
       end;
