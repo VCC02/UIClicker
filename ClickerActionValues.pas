@@ -4434,7 +4434,9 @@ end;
   function GetPropertyHint_FindSubControl_MultiPartSearching_Enabled: string;
   begin
     Result := 'If enabled, the FindSubControl action searches for individual parts of the MatchText string,' + #13#10 +
-              'expecting that the entire string cannot be found, because of unintended overlapping pixels or blanks, as a result of rendering.';
+              'expecting that the entire string cannot be found, because of unintended overlapping pixels or blanks, as a result of rendering.' + #13#10#13#10 +
+              'The current implementation is limited to a single match. If multiple matches are expected, MultiPartSearching may find the first one only.' + #13#10 +
+              'Another limitation is the resulted image, which displays only the last part as being matched, instead of all the parts as a whole.';
   end;
 
   function GetPropertyHint_FindSubControl_MultiPartSearching_MultiPartSearchingType: string;

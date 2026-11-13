@@ -3216,13 +3216,16 @@ var
   InitialAllowedColorErrorCount: Integer;
   InitialGetAllHandles: Boolean;
 
-  i, j: Integer;
-  TmpRes: Boolean;
+  i, j, k: Integer;
+  TmpRes, FoundAtLeastOnce: Boolean;
   ColorErrorCountPerCurrentText: Extended;
   Parts: TStringList;
   LatestSearchingResults: TSearchingResultArr;
   AllSearchingResultsStr: TAllSearchingResultsStrArr;
   AllControl_Count: string;
+  ResultedControl: TCompRec;
+  SuccessfulResults: TCompRecArr;
+  FirstPartCompRec: TCompRec;
 begin
   if not AFindSubControlOptions.MultiPartSearching.Enabled or
     (FindControlInputData.Text = '') then
@@ -3240,6 +3243,7 @@ begin
   begin     //currently limited to text orientation = 0       (AFindSubControlOptions.MatchBitmapText[].Orientation)
     if AFindSubControlOptions.MultiPartSearching.MultiPartSearchingType = mpstAlreadyKnownParts then
     begin
+      FoundAtLeastOnce := False;
       Parts := TStringList.Create;
       try
         Parts.LineBreak := Copy(AFindSubControlOptions.MultiPartSearching.PartsSeparator, 1, 100); //a simple limit, in case of a bad string
@@ -3257,6 +3261,7 @@ begin
 
           for i := 0 to Parts.Count - 1 do
           begin
+            AddToLog('________ New part, i = ' + IntToStr(i) + ': "' + Parts.Strings[i] + '".');
             SetLength(ResultedControlArr_Text, 0);  //possibly required when GetAllControls is True
 
             //The following description is valid for text orientation = 0 only:
@@ -3270,7 +3275,7 @@ begin
             WorkFindControlInputData.Text := FindControlInputData.Text;
             WorkFindControlInputData.GetAllHandles := FindControlInputData.GetAllHandles;
 
-            ColorErrorCountPerCurrentText := Length(FindControlInputData.Text) * InitialAllowedColorErrorCount / Length(InitialText); //This should be scaled to current text width [px], instead of string length.
+            ColorErrorCountPerCurrentText := Length(FindControlInputData.Text) * InitialAllowedColorErrorCount / Length(InitialText); //ToDo: This should be scaled to current text width [px], instead of string length.
             AFindSubControlOptions.AllowedColorErrorCount := IntToStr(Round(ColorErrorCountPerCurrentText));
             AddToLog('___ FindSubControl with AllowedColorErrorCount / TotalAllowedColorErrorCount = ' + IntToStr(Round(ColorErrorCountPerCurrentText)) + ' / ' + IntToStr(InitialAllowedColorErrorCount));
 
@@ -3283,12 +3288,13 @@ begin
 
             AddToLog('___ FindSubControl Len(AllSearchingResultsStr) = ' + IntToStr(Length(AllSearchingResultsStr)) + '  Len(LatestSearchingResults) = ' + IntToStr(Length(LatestSearchingResults)));
             SetLength(AllSearchingResultsStr, 0);
+            AddToLog('___ FindSubControl  Resetting $AllControl_Count$ = ' + EvaluateReplacements('$AllControl_Count$') + ' to 0');
             SetActionVarValue('$AllControl_Count$', '0'); //reset count here, for the next searching
             for j := 0 to Length(LatestSearchingResults) - 1 do
             begin
               if i > 0 then
               begin
-                AddToLog('___ FindSubControl - Setting area to ' + IntToStr(LatestSearchingResults[j].ControlRight) + ' at i = ' + IntToStr(i) + '  and j = ' + IntToStr(j));
+                AddToLog('____ FindSubControl - Setting area to ' + IntToStr(LatestSearchingResults[j].ControlRight) + ' at i = ' + IntToStr(i) + '  and j = ' + IntToStr(j));
                 FindControlInputData.GlobalSearchArea.Left := LatestSearchingResults[j].ControlRight;    //the current part is expected to be at right to the previous part
                 FindControlInputData.GlobalSearchArea.Top := LatestSearchingResults[j].ControlTop;
                 FindControlInputData.GlobalSearchArea.Right := LatestSearchingResults[j].ControlRight;
@@ -3323,7 +3329,34 @@ begin
 
               if TmpRes then
               begin  //add results only if found
+                if (i = 0) and (Length(ResultedControlArr_Text) > 0) then
+                  FirstPartCompRec := ResultedControlArr_Text[0];
+
+                if i = Parts.Count - 1 then
+                begin
+                  FoundAtLeastOnce := True;
+                  SetLength(SuccessfulResults, Length(ResultedControlArr_Text));
+                  for k := 0 to Length(SuccessfulResults) - 1 do
+                    SuccessfulResults[k] := ResultedControlArr_Text[k];
+                end;
+
                 SetLength(AllSearchingResultsStr, Length(AllSearchingResultsStr) + 1);
+
+                //section copied and adapted from ExecuteFindSubControl, in order to update the partial results
+                if Length(PartialResultedControlArr) > 0 then
+                begin
+                  UpdateActionVarValuesFromControl(PartialResultedControlArr[0]);
+                  frClickerActions.DebuggingInfoAvailable := True;
+
+                  if AFindSubControlOptions.GetAllControls then
+                  begin
+                    SetAllControl_Handles_FromResultedControlArr(PartialResultedControlArr, MatchSource, DetailedMatchSource);
+                    UpdateActionVarValuesFromResultedControlArr(PartialResultedControlArr);
+                  end;
+                end;
+
+                AddToLog('___ FindSubControl   Updating $AllControl_Count$ to ' + IntToStr(Length(PartialResultedControlArr)));
+                SetActionVarValue('$AllControl_Count$', IntToStr(Length(PartialResultedControlArr)));  //called by SetAllControl_Handles_FromResultedControlArr, a bit too late
 
                 AllControl_Count := EvaluateReplacements('$AllControl_Count$');
                 if (AllControl_Count = '$AllControl_Count$') or (AllControl_Count = '') or (AllControl_Count = '0') then
@@ -3343,37 +3376,67 @@ begin
                   AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlBottoms := EvaluateReplacements('$AllControl_Bottoms$')
                 end;
 
-                AddToLog('___ FindSubControl partial result  ControlLefts = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts + '  ControlRights = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights);
+                AddToLog('___ FindSubControl partial result  AllControl_Count = ' + AllControl_Count + '  ControlLefts = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlLefts + '  ControlRights = ' + AllSearchingResultsStr[Length(AllSearchingResultsStr) - 1].ControlRights);
               end;
 
               AddToLog('___ FindSubControl partial result (i = ' + IntToStr(i) + ',  j = ' + IntToStr(j) + '  Part found: ' + BoolToStr(TmpRes, True) +  '  text part = ' + FindControlInputData.Text + '):');
+
+              if FoundAtLeastOnce then
+                Break;      //This prevents further searching, and will have to be removed for GetAllControls implementation.
             end;  //for j
 
             if Length(AllSearchingResultsStr) = 0 then
             begin
               Result := False;
+              SetActionVarValue('$ExecAction_Err$', 'Part "' + Parts.Strings[i] + '" not found.');
               Exit;
             end;
           end; //for i - parts
 
           //ToDo: The debugging image will have to display the entire text (all parts) not just the last one.
         finally
+          if Length(ResultedControlArr_Text) > 1 then  //at least two items
+          begin
+            ResultedControlArr_Text[0].ComponentRectangle.Right := ResultedControlArr_Text[Length(ResultedControlArr_Text) - 1].ComponentRectangle.Right;
+            ResultedControlArr_Text[0].ComponentRectangle.Bottom := ResultedControlArr_Text[Length(ResultedControlArr_Text) - 1].ComponentRectangle.Bottom;
+            //ToDo: verify and also set for multi results
+          end;
+
+          ResultedControl.XOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
+          ResultedControl.YOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
+
+          if Length(SuccessfulResults) > 0 then
+          begin
+            SuccessfulResults[0].ComponentRectangle.Left := FirstPartCompRec.ComponentRectangle.Left;
+            SuccessfulResults[0].ComponentRectangle.Top := FirstPartCompRec.ComponentRectangle.Top;
+            SuccessfulResults[0].XOffsetFromParent := FirstPartCompRec.XOffsetFromParent;
+            SuccessfulResults[0].YOffsetFromParent := FirstPartCompRec.YOffsetFromParent;
+            ResultedControl := SuccessfulResults[0];
+
+            if Length(ResultedControlArr_Text) > 0 then
+              ResultedControlArr_Text[0] := ResultedControl;
+
+            if Length(ResultedControlArr) > 0 then
+              ResultedControlArr[0] := ResultedControl;
+
+            if Length(PartialResultedControlArr) > 0 then
+              PartialResultedControlArr[0] := ResultedControl;
+
+            UpdateActionVarValuesFromControl(ResultedControl, not FindControlInputData.StopSearchOnMismatch);
+          end;
+
           FindControlInputData.Text := InitialText;
           WorkFindControlInputData.Text := InitialText;
           AFindSubControlOptions.AllowedColorErrorCount := IntToStr(InitialAllowedColorErrorCount);
           FindControlInputData.GetAllHandles := InitialGetAllHandles;
           WorkFindControlInputData.GetAllHandles := InitialGetAllHandles;
           AFindSubControlOptions.GetAllControls := InitialGetAllHandles;
+
+          SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FoundAtLeastOnce);
+          //Ideally, DisplayDebugBmpForSuccessfulMatch should be called here, with ResultedControl, but the bitmaps are not available anymore.
         end;
       finally
         Parts.Free;
-      end;
-
-      if Length(ResultedControlArr_Text) > 1 then
-      begin
-        ResultedControlArr_Text[0].ComponentRectangle.Right := ResultedControlArr_Text[Length(ResultedControlArr_Text) - 1].ComponentRectangle.Right;
-        ResultedControlArr_Text[0].ComponentRectangle.Bottom := ResultedControlArr_Text[Length(ResultedControlArr_Text) - 1].ComponentRectangle.Bottom;
-        //ToDo: verify and also set for multi results
       end;
     end  //mpstAlreadyKnownParts
     else
@@ -3402,7 +3465,7 @@ begin
                                        MatchSource, DetailedMatchSource
                                        );
 
-          AddToLog('___ FindSubControl partial result: ' + BoolToStr(TmpRes, True) + ', text: "' + FindControlInputData.Text + '"  ColorErrorCountPerCurrentText: ' + AFindSubControlOptions.AllowedColorErrorCount + ' / ' + IntToStr(InitialAllowedColorErrorCount));
+          AddToLog('___--___ FindSubControl partial result: ' + BoolToStr(TmpRes, True) + ', text: "' + FindControlInputData.Text + '"  ColorErrorCountPerCurrentText: ' + AFindSubControlOptions.AllowedColorErrorCount + ' / ' + IntToStr(InitialAllowedColorErrorCount));
           if not TmpRes then
           begin
             //raise Exception.Create('Failed at partial text: ' + AFindSubControlOptions.MatchText);  //replace this line with matching by var positions of the remaining letters
