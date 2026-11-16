@@ -1309,8 +1309,8 @@ begin
   FindSubControl.InitialRectangle.Top := '$Control_Top$';
   FindSubControl.InitialRectangle.Right := '$Control_Left$';
   FindSubControl.InitialRectangle.Bottom := '$Control_Top$';
-  FindSubControl.InitialRectangle.LeftOffset := '0';
-  FindSubControl.InitialRectangle.TopOffset := '0';
+  FindSubControl.InitialRectangle.LeftOffset := '3';
+  FindSubControl.InitialRectangle.TopOffset := '5';
 
   if not AGetAllControls then
   begin
