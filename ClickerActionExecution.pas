@@ -3099,6 +3099,13 @@ begin
           DoOnSaveRenderedBitmap(FindControlInputData.BitmapToSearchFor, ExtBmpName);
           //
         end;
+
+        if AFindSubControlOptions.MultiPartSearching.Enabled then
+          if Assigned(FindControlInputData.BitmapToSearchForOut) and Assigned(FindControlInputData.BitmapToSearchOnOut) then
+          begin
+            FindControlInputData.BitmapToSearchForOut.Assign(FindControlInputData.BitmapToSearchFor);
+            FindControlInputData.BitmapToSearchOnOut.Assign(FindControlInputData.BitmapToSearchOn);
+          end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
         FindControlInputData.BitmapToSearchOn.Free;
@@ -3215,6 +3222,8 @@ var
   InitialText: string;
   InitialAllowedColorErrorCount: Integer;
   InitialGetAllHandles: Boolean;
+  InitialGlobalSearchArea: TRect;
+  InitialRectangleOffsets: TRect;
 
   i, j, k: Integer;
   TmpRes, FoundAtLeastOnce: Boolean;
@@ -3226,6 +3235,7 @@ var
   ResultedControl: TCompRec;
   SuccessfulResults: TCompRecArr;
   FirstPartCompRec: TCompRec;
+  ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer;
 begin
   if not AFindSubControlOptions.MultiPartSearching.Enabled or
     (FindControlInputData.Text = '') then
@@ -3245,12 +3255,16 @@ begin
     begin
       FoundAtLeastOnce := False;
       Parts := TStringList.Create;
+      FindControlInputData.BitmapToSearchForOut := TBitmap.Create;
+      FindControlInputData.BitmapToSearchOnOut := TBitmap.Create;
       try
         Parts.LineBreak := Copy(AFindSubControlOptions.MultiPartSearching.PartsSeparator, 1, 100); //a simple limit, in case of a bad string
         Parts.Text := FindControlInputData.Text;
         InitialText := FindControlInputData.Text;
         InitialAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.AllowedColorErrorCount), 0);
         InitialGetAllHandles := FindControlInputData.GetAllHandles;
+        InitialGlobalSearchArea := FindControlInputData.GlobalSearchArea;
+        InitialRectangleOffsets := FindControlInputData.InitialRectangleOffsets;
         try
           SetLength(LatestSearchingResults, 0);
           SetLength(AllSearchingResultsStr, 0);
@@ -3432,11 +3446,20 @@ begin
           WorkFindControlInputData.GetAllHandles := InitialGetAllHandles;
           AFindSubControlOptions.GetAllControls := InitialGetAllHandles;
 
+          FindControlInputData.BitmapToSearchForOut.SetSize(ResultedControl.ComponentRectangle.Width, ResultedControl.ComponentRectangle.Height);  //BitmapToSearchForOut loses its content on this call, but only its size is used by DisplayDebugBmpForSuccessfulMatch
           SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FoundAtLeastOnce);
-          //Ideally, DisplayDebugBmpForSuccessfulMatch should be called here, with ResultedControl, but the bitmaps are not available anymore.
+
+          FindControlInputData.InitialRectangleOffsets := InitialRectangleOffsets;
+          FindControlInputData.GlobalSearchArea := InitialGlobalSearchArea;
+          ComputeScreenshotArea(FindControlInputData, ResultedControl, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight);
+          Inc(ScrShot_Left, ResultedControl.XOffsetFromParent);
+          Inc(ScrShot_Top, ResultedControl.YOffsetFromParent);
+          DisplayDebugBmpForSuccessfulMatch(FindControlInputData.BitmapToSearchForOut, FindControlInputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, ResultedControl.XOffsetFromParent, ResultedControl.YOffsetFromParent, ResultedControlArr, False, FindControlInputData.FullBackgroundImageInResult)
         end;
       finally
         Parts.Free;
+        FindControlInputData.BitmapToSearchForOut.Free;
+        FindControlInputData.BitmapToSearchOnOut.Free;
       end;
     end  //mpstAlreadyKnownParts
     else

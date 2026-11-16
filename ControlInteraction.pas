@@ -51,6 +51,8 @@ type
     DebugBitmap: TBitmap; //image on debugging tab
     BitmapToSearchFor: TBitmap;
     BitmapToSearchOn: TBitmap; //used when not using Screenshot
+    BitmapToSearchForOut: TBitmap;
+    BitmapToSearchOnOut: TBitmap;
     DebugGrid: TImage;
     MatchingMethods: TMatchingMethods;
     GlobalSearchArea: TRect;
@@ -106,6 +108,7 @@ type
 
 procedure ComputeScreenshotArea(var InputData: TFindControlInputData; var CompAtPoint: TCompRec; out ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer);
 procedure CroppedFullScreenShot(ACompAtPoint: TCompRec; AFindControlInputData: TFindControlInputData; ACompWidth, ACompHeight: Integer);
+procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; ATransparentFoundSelection, AFullBackgroundImageInResult: Boolean);
 
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm;
                               AlgorithmSettings: TMatchBitmapAlgorithmSettings;
