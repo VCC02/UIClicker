@@ -3578,85 +3578,9 @@ var
   Fnm: string;
   TempStream: TMemoryStream;
 begin
-  try
-    //ExecuteCommand requires a special handling with two parts: executing the actual command, then getting the debugging content
-    if ACmd = '/' + CRECmd_ExecuteCommandAtIndex then
-    begin
-      SyncObj := TSyncHTTPCmd.Create;
-      try
-        SyncObj.FCmd := ACmd;
-        SyncObj.FParams := AParams; //it's ok to pass the pointer, however, it may not be ok to modify the list
-        SyncObj.FFullCmd := AFullCmd;
-        SyncObj.FFrame := nil;  //will get assigned on the first sync call
-        SyncObj.FErrCode := 0;
-
-        SyncObj.Synchronize;
-
-        if SyncObj.FErrCode = 0 then
-        begin
-          repeat                 //this loop executes in the context of server's thread
-            Sleep(2);
-          until not SyncObj.FFrame.ExecutingActionFromRemote;  //reset by timer
-
-          SyncObj.FCmd := '/' + CRECmd_GetExecuteCommandAtIndexResult;
-          SyncObj.Synchronize;    //process a local request
-        end;
-
-        Result := SyncObj.FResult;
-      finally
-        SyncObj.Free;
-      end;
-
-      Exit;
-    end;
-
-    if ACmd = '/' + CRECmd_TestConnection then
-    begin
-      Result := CREResp_ConnectionOK;
-      Exit;
-    end;
-
-    if ACmd = '/' + CRECmd_GetRenderedFile then
-    begin
-      Fnm := Copy(AParams.Values[CREParam_FileName], 1, CExtBmp_FilenameMaxLen);
-      AddToLogFromThread('Requested rendered file: "' + Fnm + '"');
-
-      if (Fnm <> '') and ARenderedInMemFileSystem.FileExistsInMem(Fnm) then
-      begin
-        TempStream := TMemoryStream.Create;
-        try
-          ARenderedInMemFileSystem.LoadFileFromMemToStream(Fnm, TempStream);
-          TempStream.Position := 0;
-          AOutBmp.LoadFromStream(TempStream, TempStream.Size);
-          Result := '';
-        finally
-          TempStream.Free;
-        end;
-      end
-      else
-      begin
-        Result := CREResp_FileNotFound + ': ' + Fnm;
-        AddToLogFromThread('Requested rendered file not found: "' + Fnm + '"');
-      end;
-
-      Exit;
-    end;
-
-    if ACmd = '/' + CRECmd_MouseDown then
-    begin
-      MouseDownTControl(AParams);      //can be called from server thread, if it doesn't call Application.ProcessMessages
-      Result := CREResp_Done;
-      Exit;
-    end;
-
-    if ACmd = '/' + CRECmd_MouseUp then
-    begin
-      MouseUpTControl(AParams);
-      Result := CREResp_Done;
-      Exit;
-    end;
-
-    //default behavior
+  //ExecuteCommand requires a special handling with two parts: executing the actual command, then getting the debugging content
+  if ACmd = '/' + CRECmd_ExecuteCommandAtIndex then
+  begin
     SyncObj := TSyncHTTPCmd.Create;
     try
       SyncObj.FCmd := ACmd;
@@ -3664,18 +3588,89 @@ begin
       SyncObj.FFullCmd := AFullCmd;
       SyncObj.FFrame := nil;  //will get assigned on the first sync call
       SyncObj.FErrCode := 0;
-      SyncObj.FBmp := AOutBmp;
-      SyncObj.FGPStream := AGPStream;
 
       SyncObj.Synchronize;
+
+      if SyncObj.FErrCode = 0 then
+      begin
+        repeat                 //this loop executes in the context of server's thread
+          Sleep(2);
+        until not SyncObj.FFrame.ExecutingActionFromRemote;  //reset by timer
+
+        SyncObj.FCmd := '/' + CRECmd_GetExecuteCommandAtIndexResult;
+        SyncObj.Synchronize;    //process a local request
+      end;
 
       Result := SyncObj.FResult;
     finally
       SyncObj.Free;
     end;
-  except
-    on E: Exception do
-      Result := 'ProcessServerCommand exception: ' + E.Message;
+
+    Exit;
+  end;
+
+  if ACmd = '/' + CRECmd_TestConnection then
+  begin
+    Result := CREResp_ConnectionOK;
+    Exit;
+  end;
+
+  if ACmd = '/' + CRECmd_GetRenderedFile then
+  begin
+    Fnm := Copy(AParams.Values[CREParam_FileName], 1, CExtBmp_FilenameMaxLen);
+    AddToLogFromThread('Requested rendered file: "' + Fnm + '"');
+
+    if (Fnm <> '') and ARenderedInMemFileSystem.FileExistsInMem(Fnm) then
+    begin
+      TempStream := TMemoryStream.Create;
+      try
+        ARenderedInMemFileSystem.LoadFileFromMemToStream(Fnm, TempStream);
+        TempStream.Position := 0;
+        AOutBmp.LoadFromStream(TempStream, TempStream.Size);
+        Result := '';
+      finally
+        TempStream.Free;
+      end;
+    end
+    else
+    begin
+      Result := CREResp_FileNotFound + ': ' + Fnm;
+      AddToLogFromThread('Requested rendered file not found: "' + Fnm + '"');
+    end;
+
+    Exit;
+  end;
+
+  if ACmd = '/' + CRECmd_MouseDown then
+  begin
+    MouseDownTControl(AParams);      //can be called from server thread, if it doesn't call Application.ProcessMessages
+    Result := CREResp_Done;
+    Exit;
+  end;
+
+  if ACmd = '/' + CRECmd_MouseUp then
+  begin
+    MouseUpTControl(AParams);
+    Result := CREResp_Done;
+    Exit;
+  end;
+
+  //default behavior
+  SyncObj := TSyncHTTPCmd.Create;
+  try
+    SyncObj.FCmd := ACmd;
+    SyncObj.FParams := AParams; //it's ok to pass the pointer, however, it may not be ok to modify the list
+    SyncObj.FFullCmd := AFullCmd;
+    SyncObj.FFrame := nil;  //will get assigned on the first sync call
+    SyncObj.FErrCode := 0;
+    SyncObj.FBmp := AOutBmp;
+    SyncObj.FGPStream := AGPStream;
+
+    SyncObj.Synchronize;
+
+    Result := SyncObj.FResult;
+  finally
+    SyncObj.Free;
   end;
 end;
 
@@ -3742,7 +3737,15 @@ begin
     GPStream := nil;
 
   try
-    AResponseInfo.ContentText := ProcessServerCommand(Cmd, ARequestInfo.Params, ARequestInfo.Command, Bmp, GPStream, FRenderedInMemFileSystem);
+    try
+      AResponseInfo.ContentText := ProcessServerCommand(Cmd, ARequestInfo.Params, ARequestInfo.Command, Bmp, GPStream, FRenderedInMemFileSystem);
+    except
+      on E: Exception do
+      begin
+        AResponseInfo.ContentText := 'ProcessServerCommand exception: ' + E.Message;
+        AddToLogFromThread(AResponseInfo.ContentText);
+      end;
+    end;
 
     if GettingImage then
     begin

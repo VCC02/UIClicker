@@ -3418,6 +3418,9 @@ begin
 
           ResultedControl.XOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
           ResultedControl.YOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
+          ResultedControl.ComponentRectangle := InitialGlobalSearchArea; //some init values
+          Dec(ResultedControl.ComponentRectangle.Left, InitialRectangleOffsets.Left);
+          Dec(ResultedControl.ComponentRectangle.Top, InitialRectangleOffsets.Top);
 
           if Length(SuccessfulResults) > 0 then
           begin
