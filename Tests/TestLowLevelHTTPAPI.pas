@@ -1337,7 +1337,7 @@ begin
   if not AExpectFailedAction then
     ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find multi part text on GradientText', 3000, CREParam_FileLocation_ValueMem)))
   else
-    ExpectFailedAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find multi part text on GradientText', 3000, CREParam_FileLocation_ValueMem)), 'acOnce');
+    ExpectFailedAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find multi part text on GradientText', 3000, CREParam_FileLocation_ValueMem)), 'acOnce', 'FindSubControl should not find the text part.');
 
   Expect(GetVarValueFromServer('$Control_Left$')).ToBe(AExpectedTextPartsOffsets[0], 'First part .Left');
   Expect(GetVarValueFromServer('$Control_Top$')).ToBe(AExpectedTextPartsOffsets[1], 'First part .Top');

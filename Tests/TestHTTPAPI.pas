@@ -116,8 +116,8 @@ const
 
 procedure ExpectSuccessfulAction(AListOfVars: TStringList; AExtraMessage: string = ''); overload;
 procedure ExpectSuccessfulAction(AListOfVars: string; AExtraMessage: string = ''); overload;
-procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string); overload;
-procedure ExpectFailedAction(AListOfVars, APartOfErrorMessage: string); overload;
+procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string; AExtraMessage: string = ''); overload;
+procedure ExpectFailedAction(AListOfVars, APartOfErrorMessage: string; AExtraMessage: string = ''); overload;
 procedure ExpectAllowedFailedAction(AListOfVars: TStringList);
 
 
@@ -158,22 +158,22 @@ begin
 end;
 
 
-procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string);
+procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string; AExtraMessage: string = '');
 begin
-  Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').ToContain(APartOfErrorMessage, 'An error is expected.');
-  Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('0', 'Expected failed action.');
-  Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Failed');
+  Expect(AListOfVars).WithItem('$ExecAction_Err$', 'Expected $ExecAction_Err$ in list of vars. ' + AExtraMessage).ToContain(APartOfErrorMessage, 'An error is expected. ' + AExtraMessage);
+  Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'Expected ' + CREResp_RemoteExecResponseVar + ' in list of vars.' + AExtraMessage).OfValue('0', 'Expected failed action. ' + AExtraMessage);
+  Expect(AListOfVars).WithItem('$LastAction_Status$', 'Expected $LastAction_Status$ in list of vars. ' + AExtraMessage).OfValue('Failed');
 end;
 
 
-procedure ExpectFailedAction(AListOfVars, APartOfErrorMessage: string);
+procedure ExpectFailedAction(AListOfVars, APartOfErrorMessage: string; AExtraMessage: string = '');
 var
   TempListOfVars: TStringList;
 begin
   TempListOfVars := TStringList.Create;
   try
     TempListOfVars.Text := AListOfVars;
-    ExpectFailedAction(TempListOfVars, APartOfErrorMessage);
+    ExpectFailedAction(TempListOfVars, APartOfErrorMessage, AExtraMessage);
   finally
     TempListOfVars.Free;
   end;
